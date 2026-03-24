@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Kişisel Yeni Sekme",
+  "version": "1.0",
+  "description": "Kendi özel komuta merkezim.",
+  "permissions": [
+    "windows"
+  ],
+  "chrome_url_overrides": {
+    "newtab": "kokpit.html"
+  }
+}

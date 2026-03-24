@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Yeni Sekme</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- SOL MENÜ (SIDEBAR) -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3 class="sidebar-title">Favoriler</h3>
+            <div class="header-actions">
+                <button id="addSidebarBtn" class="action-btn" title="Menüye Ekle">➕</button>
+                <button id="btnExport" class="action-btn" title="Ayarları JSON olarak indir">💾</button>
+                <button id="btnImport" class="action-btn" title="JSON dosyasından yükle">📁</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </div>
+        </div>
+        <div id="sidebar-items"></div>
+    </div>
+
+    <!-- LEFT SPLITTER -->
+    <div class="resizer" id="leftResizer"></div>
+
+    <!-- ANA İÇERİK -->
+    <div class="main-content">
+        <!-- Sayfa Üstü (Header) -->
+        <div class="main-header">
+            <div class="header-left">
+                <button id="toggleLeftSidebar" class="toggle-btn" title="Sol Menüyü Aç/Kapat">☰</button>
+                <button id="btnNewIncognito" class="toggle-btn" title="Yeni Gizli Sekme">🕵️</button>
+            </div>
+            <div class="header-right">
+                <div id="profileBtn" class="profile-button">
+                    <span class="profile-icon">😎</span>
+                    <span>Varsayılan</span>
+                </div>
+                <button id="btnNewPersonalTab" class="toggle-btn" title="Kişisel Yeni Sekme">⚙️</button>
+                <button id="toggleRightSidebar" class="toggle-btn" title="Sağ Menüyü Aç/Kapat">☰</button>
+            </div>
+        </div>
+
+        <!-- Arama Çubuğu -->
+        <div class="search-container">
+            <form action="https://www.google.com/search" method="GET">
+                <input type="text" name="q" placeholder="Google'da ara..." autofocus autocomplete="off">
+            </form>
+        </div>
+
+        <!-- Kısayol Izgarası -->
+        <div class="grid-container" id="grid-container">
+            <!-- JS ile doldurulacak -->
+        </div>
+    </div>
+
+    <!-- RIGHT SPLITTER -->
+    <div class="resizer" id="rightResizer"></div>
+
+    <!-- SAĞ MENÜ (AUTHUSER & NOTLAR) -->
+    <div class="right-sidebar">
+        <div class="auth-section">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">Google Hesapları</h3>
+                <div class="header-actions">
+                    <button id="addAuthUserBtn" class="action-btn" title="Hesap Ekle">➕</button>
+                    <button id="btnDisableAuthUser" class="action-btn" title="Hesap Durumunu Kapat">🚫</button>
+                </div>
+            </div>
+            <div id="authuser-items" class="authuser-items-container"></div>
+        </div>
+
+        <div class="h-resizer" id="middleResizer"></div>
+
+        <div class="notes-section">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">Notlar</h3>
+                <div class="header-actions">
+                    <button id="addNoteBtn" class="action-btn" title="Yeni Not Ekle">➕</button>
+                </div>
+            </div>
+            <div id="notes-items" class="notes-items-container"></div>
+        </div>
+    </div>
+
+    <!-- DÜZENLEME MODALI -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Kısayol Düzenle</h3>
+            <div class="input-group" id="itemTypeGroup" style="display: none;">
+                <label>Tür</label>
+                <select id="itemType">
+                    <option value="link">Link</option>
+                    <option value="folder">Klasör</option>
+                </select>
+            </div>
+            <div class="input-group" id="itemNameGroup">
+                <label>İsim / Başlık</label>
+                <input type="text" id="itemName" placeholder="Örn: GitHub">
+            </div>
+            <div class="input-group" id="itemUrlGroup">
+                <label>URL</label>
+                <input type="url" id="itemUrl" placeholder="Örn: https://github.com">
+            </div>
+            <div class="modal-actions">
+                <button id="btnDelete" class="danger">Sil</button>
+                <div class="right-actions">
+                    <button id="btnCancel" class="cancel">İptal</button>
+                    <button id="btnSave" class="primary">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFİL YÖNETİM MODALI -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <h3>Profilleri Yönet</h3>
+            <div id="profile-list" class="profile-list">
+                <!-- JS ile doldurulacak -->
+            </div>
+            <div class="add-profile-group">
+                <input type="text" id="newProfileName" placeholder="Yeni profil adı... (Örn: İş)">
+                <button id="btnAddProfile" class="primary">Ekle</button>
+            </div>
+            <div class="modal-actions flex-end">
+                <button id="btnCloseProfileModal" class="cancel">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFİL DÜZENLEME MODALI -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <h3>Profil Düzenle</h3>
+            <div class="input-group">
+                <label>Profil Adı</label>
+                <input type="text" id="editProfileName" placeholder="Örn: İş">
+            </div>
+            <div class="input-group">
+                <label>Google Hesabı (AuthUser No) <small>Opsiyonel</small></label>
+                <input type="number" id="editProfileAuthNo" placeholder="Örn: 0, 1, 2" min="0">
+                <small>0: İlk giriş yaptığınız hesap, 1:
+                    İkinci hesap vb.</small>
+            </div>
+            <div class="input-group">
+                <label>Bağlı E-Posta / Etiket <small>Hatırlatıcı</small></label>
+                <input type="text" id="editProfileAuthEmail" placeholder="Örn: is@sirket.com">
+            </div>
+            <div class="modal-actions flex-end">
+                <button id="btnCancelEditProfile" class="cancel">İptal</button>
+                <button id="btnSaveEditProfile" class="primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTHUSER DÜZENLEME MODALI -->
+    <div id="authUserModal" class="modal">
+        <div class="modal-content">
+            <h3 id="authUserModalTitle">Hesap Ekle</h3>
+            <div class="input-group">
+                <label>Google Hesabı Numarası (AuthUser No)</label>
+                <input type="number" id="authObjNo" placeholder="Örn: 0, 1, 2" min="0">
+                <small>0 ilk giren hesaptır, 1 ikincisidir
+                    vb.</small>
+            </div>
+            <div class="input-group">
+                <label>Etiket / E-Posta (Hatırlatıcı)</label>
+                <input type="text" id="authObjLabel" placeholder="Örn: is@sirket.com">
+            </div>
+            <div class="modal-actions">
+                <button id="btnDeleteAuthUser" class="danger">Sil</button>
+                <div class="right-actions">
+                    <button id="btnCancelAuthUser" class="cancel">İptal</button>
+                    <button id="btnSaveAuthUser" class="primary">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOT DÜZENLEME MODALI -->
+    <div id="noteModal" class="modal">
+        <div class="modal-content wide">
+            <h3 id="noteModalTitle">Not Ekle</h3>
+            <div class="input-group">
+                <label>Not İçeriği</label>
+                <textarea id="noteContent" rows="8" placeholder="Notunuzu buraya yazın..."></textarea>
+            </div>
+            <div class="input-group">
+                <label>Renk</label>
+                <div class="color-picker" id="noteColorPicker">
+                    <div class="color-dot default active" data-color="default" title="Varsayılan"></div>
+                    <div class="color-dot blue" data-color="blue" title="Mavi / Bilgi"></div>
+                    <div class="color-dot pink" data-color="pink" title="Pembe / Kritik"></div>
+                    <div class="color-dot green" data-color="green" title="Yeşil / Güvenli"></div>
+                    <div class="color-dot yellow" data-color="yellow" title="Sarı / Dikkat"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="btnDeleteNote" class="danger">Sil</button>
+                <div class="right-actions">
+                    <button id="btnCancelNote" class="cancel">İptal</button>
+                    <button id="btnSaveNote" class="primary">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
