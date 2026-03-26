@@ -2,7 +2,8 @@ const isFirefox = () => typeof browser !== 'undefined';
 
 const kokpitData = {
     currentProfileName: "Varsayılan",
-    activeTheme: "dark", // v1.1 Yeni Özellik: Tema Desteği
+    activeTheme: "dark",
+    authSectionCollapsed: false, // v1.1.8: Hesaplar bölümü daraltma durumu
     profiles: [
         {
             name: "Varsayılan",
@@ -144,6 +145,8 @@ function loadData() {
         applyTheme("dark");
     }
 
+    updateAuthSectionUI();
+
     renderAll();
 }
 
@@ -205,6 +208,22 @@ function openThemeModal() {
 function closeThemeModal() {
     const modal = document.getElementById("themeModal");
     if (modal) modal.style.display = "none";
+}
+
+function updateAuthSectionUI() {
+    const section = document.querySelector(".auth-section");
+    const toggle = document.getElementById("toggleAuthSection");
+    if (section && toggle) {
+        if (kokpitData.authSectionCollapsed) {
+            section.classList.add("collapsed");
+            section.style.height = ""; // v1.1.9: Inline yüksekliði temizle
+            section.style.flex = "";   // v1.1.9: Inline flex'i temizle
+            toggle.textContent = "📁";
+        } else {
+            section.classList.remove("collapsed");
+            toggle.textContent = "📂";
+        }
+    }
 }
 
 function renderAll() {
@@ -918,10 +937,20 @@ function renderNotes() {
         div.className = "note-item";
         if(note.color && note.color !== 'default') div.classList.add(note.color);
         
+        const contentWrapper = document.createElement("div");
+        contentWrapper.style.cssText = "display: flex; align-items: center; gap: 8px;";
+        
+        const dot = document.createElement("span");
+        dot.className = "note-dot";
+        dot.textContent = "●";
+        contentWrapper.appendChild(dot);
+
         const textDiv = document.createElement("div");
         textDiv.className = "note-text";
         textDiv.textContent = note.text;
-        div.appendChild(textDiv);
+        contentWrapper.appendChild(textDiv);
+        
+        div.appendChild(contentWrapper);
         
         const actionsDiv = document.createElement("div");
         actionsDiv.className = "note-actions";
@@ -1252,6 +1281,15 @@ document.addEventListener("DOMContentLoaded", () => {
     
     const btnCloseThemeModal = document.getElementById("btnCloseThemeModal");
     if (btnCloseThemeModal) btnCloseThemeModal.addEventListener("click", closeThemeModal);
+
+    const toggleAuth = document.getElementById("toggleAuthSection");
+    if (toggleAuth) {
+        toggleAuth.addEventListener("click", () => {
+            kokpitData.authSectionCollapsed = !kokpitData.authSectionCollapsed;
+            updateAuthSectionUI();
+            saveData();
+        });
+    }
 
     document.querySelectorAll(".theme-option").forEach(option => {
         option.addEventListener("click", () => {

@@ -133,12 +133,12 @@ body {
 .sidebar-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 15px 20px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .header-actions {
+    margin-left: auto;
     display: flex;
     gap: 8px;
 }
@@ -551,23 +551,54 @@ button:active {
 }
 
 button.primary {
-    background-color: var(--accent);
-    color: var(--bg-sidebar);
+    background-color: #8ab4f8;
+    color: #1a1b1e;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+button.primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
 }
 
 button.cancel {
-    background-color: transparent;
-    color: var(--accent);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-dim);
     border: 1px solid var(--border-color);
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button.cancel:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
 }
 
 button.danger {
     background-color: #f28b82;
-    color: #fff;
+    color: #1a1b1e;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
 }
 
-button.danger[style*="display: none"] {
-    display: none !important;
+button.danger:hover {
+    background-color: #eea8a2;
+    transform: translateY(-1px);
 }
 
 /* Sürükle Bırak (Drag & Drop) Efektleri */
@@ -588,6 +619,15 @@ button.danger[style*="display: none"] {
     background-color: var(--bg-main);
     color: var(--text-main);
     outline: none;
+}
+
+.section-toggle {
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 8px;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+    user-select: none;
 }
 
 /* Notlar Bölümü Yerleşimi */
@@ -653,6 +693,25 @@ button.danger[style*="display: none"] {
     display: none !important;
 }
 
+.auth-section.collapsed .authuser-items-container {
+    display: none;
+}
+
+.auth-section.collapsed {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    border-bottom: none !important;
+}
+
+.auth-section.collapsed .section-toggle {
+    /* v1.1.12: Emoji dönmesin diye rotate kaldırıldı */
+}
+
+.auth-section.collapsed + #middleResizer {
+    display: none;
+}
+
 .auth-section {
     display: flex;
     flex-direction: column;
@@ -668,7 +727,7 @@ button.danger[style*="display: none"] {
 }
 
 .auth-item {
-    padding: 12px 24px;
+    padding: 6px 24px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -778,23 +837,38 @@ button.danger[style*="display: none"] {
     border: 1px solid var(--border-color);
     position: relative;
     cursor: pointer;
-    transition: background-color 0.2s, border-left 0.2s;
-    border-left: 4px solid var(--bg-item-active);
+    transition: all 0.2s;
 }
 
 .note-item:hover {
     background-color: var(--bg-item-hover);
 }
 
-.note-item.blue { border-left-color: #8ab4f8; background-color: rgba(138, 180, 248, 0.08); }
-.note-item.pink { border-left-color: #f28b82; background-color: rgba(242, 139, 130, 0.08); }
-.note-item.green { border-left-color: #81c995; background-color: rgba(129, 201, 149, 0.08); }
-.note-item.yellow { border-left-color: #fdd663; background-color: rgba(253, 214, 99, 0.08); }
+.note-item.blue { border-color: #8ab4f8; background-color: rgba(138, 180, 248, 0.08); color: #8ab4f8; }
+.note-item.pink { border-color: #f28b82; background-color: rgba(242, 139, 130, 0.08); color: #f28b82; }
+.note-item.green { border-color: #81c995; background-color: rgba(129, 201, 149, 0.08); color: #81c995; }
+.note-item.yellow { border-color: #fdd663; background-color: rgba(253, 214, 99, 0.08); color: #fdd663; }
+.note-item.purple { border-color: #d291ff; background-color: rgba(210, 145, 255, 0.08); color: #d291ff; }
+.note-item.orange { border-color: #f69d50; background-color: rgba(246, 157, 80, 0.08); color: #f69d50; }
+
+.note-item.blue .note-text { color: #8ab4f8; }
+.note-item.pink .note-text { color: #f28b82; }
+.note-item.green .note-text { color: #81c995; }
+.note-item.yellow .note-text { color: #fdd663; }
+.note-item.purple .note-text { color: #d291ff; }
+.note-item.orange .note-text { color: #f69d50; }
 
 .note-item.blue:hover { background-color: rgba(138, 180, 248, 0.15); }
 .note-item.pink:hover { background-color: rgba(242, 139, 130, 0.15); }
 .note-item.green:hover { background-color: rgba(129, 201, 149, 0.15); }
 .note-item.yellow:hover { background-color: rgba(253, 214, 99, 0.15); }
+.note-item.purple:hover { background-color: rgba(210, 145, 255, 0.15); }
+.note-item.orange:hover { background-color: rgba(246, 157, 80, 0.15); }
+
+.note-dot {
+    font-size: 8px;
+    line-height: 1;
+}
 
 .note-text {
     font-size: 13px;
@@ -831,6 +905,7 @@ button.danger[style*="display: none"] {
 
 .note-btn:hover {
     color: var(--text-main);
+    transform: scale(1.1);
 }
 
 /* Renk Seçer (Note Modal) */
@@ -841,21 +916,43 @@ button.danger[style*="display: none"] {
 }
 
 .color-dot {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid transparent;
-    transition: transform 0.2s, border-color 0.2s;
+    border: 2px solid var(--border-color);
+    transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.color-dot::after {
+    content: "●";
+    font-size: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    color: white;
 }
 
 .color-dot:hover {
-    transform: scale(1.1);
+    transform: translateY(-2px);
 }
 
 .color-dot.active {
-    border-color: var(--text-main);
     transform: scale(1.1);
+}
+
+.color-dot.blue.active { border-color: #8ab4f8; }
+.color-dot.pink.active { border-color: #f28b82; }
+.color-dot.green.active { border-color: #81c995; }
+.color-dot.yellow.active { border-color: #fdd663; }
+.color-dot.purple.active { border-color: #d291ff; }
+.color-dot.orange.active { border-color: #f69d50; }
+.color-dot.default.active { border-color: var(--accent); }
+
+.color-dot.active::after {
+    opacity: 1;
 }
 
 .color-dot.default { background-color: var(--bg-item-active); border: 1px solid var(--border-color); }
@@ -863,6 +960,8 @@ button.danger[style*="display: none"] {
 .color-dot.pink { background-color: #f28b82; }
 .color-dot.green { background-color: #81c995; }
 .color-dot.yellow { background-color: #fdd663; }
+.color-dot.purple { background-color: #d291ff; }
+.color-dot.orange { background-color: #f69d50; }
 
 /* Panel Resizers */
 .resizer {
