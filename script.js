@@ -4,6 +4,7 @@ const kokpitData = {
     currentProfileName: "Varsayılan",
     activeTheme: "dark",
     authSectionCollapsed: false, // v1.1.8: Hesaplar bölümü daraltma durumu
+    soundEnabled: true, // v1.4: Ses Kontrolü
     profiles: [
         {
             name: "Varsayılan",
@@ -19,6 +20,91 @@ const kokpitData = {
         }
     ]
 };
+
+// v1.4: Cyber-Audio Engine (Synthesized Sounds)
+class SoundManager {
+    constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+    }
+
+    init() {
+        if (this.ctx) return;
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.connect(this.ctx.destination);
+    }
+
+    play(freq, type, duration, volume, rampType = 'exponential') {
+        if (!kokpitData.soundEnabled) return;
+        this.init();
+        
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        
+        g.gain.setValueAtTime(volume, this.ctx.currentTime);
+        if (rampType === 'exponential') {
+            g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+        } else {
+            g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
+        }
+        
+        osc.connect(g);
+        g.connect(this.masterGain);
+        
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+    }
+
+    playBeep() { this.playFriction(); }
+    
+    playFriction() { 
+        // Varla yok arası sürtünme sesi (yüksek frekanslı pıtırtı)
+        this.play(2000 + Math.random() * 500, 'sine', 0.02, 0.01, 'linear'); 
+    }
+
+    playClick() { this.play(440, 'square', 0.05, 0.02); }
+
+    playSave() {
+        this.play(660, 'sine', 0.1, 0.05);
+        setTimeout(() => this.play(880, 'sine', 0.15, 0.03), 50);
+    }
+
+    playDelete() {
+        this.play(220, 'square', 0.2, 0.05);
+        this.play(110, 'square', 0.3, 0.03);
+    }
+
+    playCancel() {
+        this.play(330, 'sine', 0.1, 0.04, 'linear');
+    }
+
+    playHologram() {
+        if (!kokpitData.soundEnabled) return;
+        this.init();
+        this.play(110, 'sine', 0.5, 0.1);
+        this.play(220, 'sine', 0.3, 0.05);
+    }
+}
+
+const sounds = new SoundManager();
+
+function toggleSound() {
+    kokpitData.soundEnabled = !kokpitData.soundEnabled;
+    updateSoundUI();
+    saveData();
+    if (kokpitData.soundEnabled) sounds.playClick();
+}
+
+function updateSoundUI() {
+    const btn = document.getElementById("btnSound");
+    if (btn) {
+        btn.textContent = kokpitData.soundEnabled ? "🔊" : "🔇";
+    }
+}
 
 // Aktif profilin verilerine kolayca erişmek için yardımcı fonksiyon
 function getActiveProfile() {
@@ -201,11 +287,13 @@ function applyTheme(themeName) {
 }
 
 function openThemeModal() {
+    sounds.playHologram();
     const modal = document.getElementById("themeModal");
     if (modal) modal.style.display = "flex";
 }
 
 function closeThemeModal() {
+    sounds.playCancel();
     const modal = document.getElementById("themeModal");
     if (modal) modal.style.display = "none";
 }
@@ -306,6 +394,7 @@ function renderProfileList() {
 let profileBeingEdited = null;
 
 function openEditProfileModal(profileName) {
+    sounds.playHologram();
     const profile = kokpitData.profiles.find(p => p.name === profileName);
     if (!profile) return;
     
@@ -318,6 +407,7 @@ function openEditProfileModal(profileName) {
 }
 
 function closeEditProfileModal() {
+    sounds.playCancel();
     document.getElementById("editProfileModal").style.display = "none";
     profileBeingEdited = null;
 }
@@ -339,6 +429,7 @@ function saveProfileEdit() {
         return;
     }
     
+    sounds.playSave();
     const profile = kokpitData.profiles.find(p => p.name === profileBeingEdited);
     if (profile) {
         profile.name = newName;
@@ -356,6 +447,7 @@ function saveProfileEdit() {
 }
 
 function switchProfile(profileName) {
+    sounds.playClick();
     kokpitData.currentProfileName = profileName;
     saveData();
     closeProfileModal();
@@ -392,6 +484,7 @@ function deleteProfile(profileName) {
         return;
     }
     if (confirm(`"${profileName}" profilini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`)) {
+        sounds.playDelete();
         kokpitData.profiles = kokpitData.profiles.filter(p => p.name !== profileName);
         renderProfileList();
         saveData();
@@ -399,6 +492,7 @@ function deleteProfile(profileName) {
 }
 
 function openProfileModal() {
+    sounds.playHologram();
     renderProfileList();
     document.getElementById("profileModal").style.display = "flex";
 }
@@ -435,6 +529,7 @@ function renderAuthUsers() {
         div.appendChild(labelDiv);
         
         div.addEventListener("click", () => {
+            sounds.playClick();
             kokpitData.globalActiveAuthNo = item.no;
             saveData();
         });
@@ -453,6 +548,7 @@ function renderAuthUsers() {
 }
 
 function openAuthUserModal(index) {
+    sounds.playHologram();
     currentEditAuthUserIndex = index;
     document.getElementById("authUserModal").style.display = "flex";
     
@@ -470,6 +566,7 @@ function openAuthUserModal(index) {
 }
 
 function closeAuthUserModal() {
+    sounds.playCancel();
     document.getElementById("authUserModal").style.display = "none";
 }
 
@@ -487,6 +584,7 @@ function saveAuthUser() {
             alert("Bu numaraya ait bir hesap zaten var.");
             return;
         }
+        sounds.playSave();
         kokpitData.authUsers.push({no, label});
         kokpitData.globalActiveAuthNo = no;
     } else {
@@ -495,6 +593,7 @@ function saveAuthUser() {
             alert("Bu numaraya ait bir hesap zaten var.");
             return;
         }
+        sounds.playSave();
         kokpitData.authUsers[currentEditAuthUserIndex] = {no, label};
         if(kokpitData.globalActiveAuthNo === oldNo) {
             kokpitData.globalActiveAuthNo = no;
@@ -506,6 +605,9 @@ function saveAuthUser() {
 }
 
 function deleteAuthUser() {
+    if (!confirm("Bu hesabı silmek istediğinize emin misiniz?")) return;
+    
+    sounds.playDelete();
     const oldNo = kokpitData.authUsers[currentEditAuthUserIndex].no;
     kokpitData.authUsers.splice(currentEditAuthUserIndex, 1);
     
@@ -517,6 +619,7 @@ function deleteAuthUser() {
 }
 
 function closeProfileModal() {
+    sounds.playCancel();
     document.getElementById("profileModal").style.display = "none";
 }
 
@@ -651,6 +754,10 @@ function renderSidebar() {
         if(item.type === 'folder') div.classList.add("sidebar-folder");
         else div.style.cursor = "pointer";
 
+        div.addEventListener('mouseenter', () => {
+            sounds.playBeep();
+        });
+
         const infoDiv = document.createElement("div");
         infoDiv.style.cssText = "display:flex; align-items:center; gap:12px; pointer-events: none; width: 85%;";
         
@@ -715,6 +822,7 @@ function renderSidebar() {
             }
             
             div.addEventListener("click", (e) => {
+                sounds.playClick();
                 if(e.target === editBtn) return;
                 div.classList.toggle("open");
                 contentDiv.classList.toggle("open");
@@ -735,12 +843,14 @@ function renderSidebar() {
             parentContainer.appendChild(contentDiv);
         } else {
             div.addEventListener("click", (e) => {
+                sounds.playClick();
                 if(e.target === editBtn) return;
                 const finalUrl = modifyUrlWithAuthUser(item.url);
                 if (e.ctrlKey || e.metaKey) window.open(finalUrl, '_blank'); 
                 else window.location.href = finalUrl;
             });
             div.addEventListener("auxclick", (e) => { 
+                sounds.playClick();
                 if (e.button === 1) window.open(modifyUrlWithAuthUser(item.url), '_blank'); 
             });
             parentContainer.appendChild(div);
@@ -762,13 +872,19 @@ function renderGrid() {
         
         // Tıklama olayları
         div.addEventListener("click", (e) => {
+            sounds.playClick();
             const finalUrl = modifyUrlWithAuthUser(item.url);
             if (e.ctrlKey || e.metaKey) window.open(finalUrl, '_blank'); 
             else window.location.href = finalUrl;
         });
         div.addEventListener("mousedown", (e) => { if (e.button === 1) e.preventDefault(); });
         div.addEventListener("auxclick", (e) => { 
+            sounds.playClick();
             if (e.button === 1) window.open(modifyUrlWithAuthUser(item.url), '_blank'); 
+        });
+
+        div.addEventListener('mouseenter', () => {
+            sounds.playBeep();
         });
 
         // Sürükle Bırak Olaylarını Ekle
@@ -823,6 +939,7 @@ function renderGrid() {
 }
 
 function openModal(type, indexOrPath) {
+    sounds.playHologram();
     currentEditType = type;
     currentEditIndex = indexOrPath;
 
@@ -868,6 +985,7 @@ function openModal(type, indexOrPath) {
 }
 
 function closeModal() {
+    sounds.playCancel();
     document.getElementById("editModal").style.display = "none";
 }
 
@@ -890,6 +1008,8 @@ function saveItem() {
 
     const activeProfile = getActiveProfile();
     if (!activeProfile) return;
+    
+    sounds.playSave();
     const rootArray = currentEditType === 'sidebar' ? activeProfile.sidebar : activeProfile.shortcuts;
 
     const newItem = { name, url, type: currentEditType === 'sidebar' ? typeSelect : 'link' };
@@ -915,6 +1035,7 @@ function deleteItem() {
     if (!activeProfile) return;
     const rootArray = currentEditType === 'sidebar' ? activeProfile.sidebar : activeProfile.shortcuts;
     const itemInfo = getParentArrayAndIndexPairs(currentEditIndex, rootArray);
+    sounds.playDelete();
     itemInfo.array.splice(itemInfo.index, 1);
     saveData();
     closeModal();
@@ -964,12 +1085,19 @@ function renderNotes() {
         div.appendChild(actionsDiv);
         
         div.addEventListener("dblclick", () => openNoteModal(index));
+        div.addEventListener('mouseenter', () => {
+            sounds.playBeep();
+        });
+        div.addEventListener('click', () => {
+            sounds.playClick();
+        });
         
         container.appendChild(div);
     });
 }
 
 function openNoteModal(index) {
+    sounds.playHologram();
     currentNoteIndex = index;
     const modal = document.getElementById("noteModal");
     const contentInput = document.getElementById("noteContent");
@@ -999,6 +1127,7 @@ function openNoteModal(index) {
 }
 
 function closeNoteModal() {
+    sounds.playCancel();
     document.getElementById("noteModal").style.display = "none";
 }
 
@@ -1011,8 +1140,10 @@ function saveNote() {
     if(!activeProfile.notes) activeProfile.notes = [];
     
     if(currentNoteIndex === -1) {
+        sounds.playSave();
         activeProfile.notes.push({ text, id: Date.now(), color: currentNoteColor });
     } else {
+        sounds.playSave();
         activeProfile.notes[currentNoteIndex].text = text;
         activeProfile.notes[currentNoteIndex].color = currentNoteColor;
     }
@@ -1025,6 +1156,7 @@ function deleteNote() {
     if(confirm("Bu notu silmek istediğinize emin misiniz?")) {
         const activeProfile = getActiveProfile();
         if(!activeProfile) return;
+        sounds.playDelete();
         activeProfile.notes.splice(currentNoteIndex, 1);
         saveData();
         closeNoteModal();
@@ -1046,6 +1178,7 @@ function exportData() {
     const blob = new Blob([JSON.stringify(kokpitData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     
+    sounds.playSave();
     // Gizli bir link oluşturup tıklatarak indirme işlemini başlat
     const a = document.createElement("a");
     a.href = url;
@@ -1068,6 +1201,7 @@ function importData(event) {
             if (data.profiles && data.currentProfileName) {
                 Object.assign(kokpitData, data);
                 saveData();
+                sounds.playSave();
                 alert("Yedek başarıyla yüklendi!");
             } 
             // Eski formatı kontrol et (sidebar ve shortcuts)
@@ -1332,14 +1466,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnSaveAuthUser").addEventListener("click", saveAuthUser);
     document.getElementById("btnDeleteAuthUser").addEventListener("click", deleteAuthUser);
     
-    // AuthUser Kapalı Butonu
-    const disableBtn = document.getElementById("btnDisableAuthUser");
-    if (disableBtn) {
-        disableBtn.addEventListener("click", () => {
-            kokpitData.globalActiveAuthNo = null;
-            saveData();
-        });
-    }
+    // v1.4: Ses Kontrol Butonu
+    const btnSound = document.getElementById("btnSound");
+    if (btnSound) btnSound.addEventListener("click", toggleSound);
+
+    // Başlangıç UI Güncellemeleri
+    updateThemeUI();
+    updateAuthSectionUI();
+    updateSoundUI();
+    renderSidebar();
+    renderGrid();
+    renderNoteList();
 });
 
 window.addEventListener("click", function(event) {
