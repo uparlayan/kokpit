@@ -1,3 +1,5 @@
+const isFirefox = () => typeof browser !== 'undefined';
+
 const kokpitData = {
     currentProfileName: "Varsayılan",
     profiles: [
@@ -593,8 +595,16 @@ function renderSidebar() {
             const img = div.querySelector('img');
             if (img) {
                 img.onerror = () => {
-                    if (!img.src.startsWith('chrome-extension://')) {
+                    if (!isFirefox() && !img.src.startsWith('chrome-extension://')) {
                         img.src = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(item.url)}&size=64`;
+                    } else if (isFirefox() && !img.src.includes('icons.duckduckgo.com')) {
+                        try {
+                            const urlObj = new URL(item.url);
+                            img.src = `https://icons.duckduckgo.com/ip3/${urlObj.hostname}.ico`;
+                        } catch (e) {
+                            img.src = DEFAULT_FAVICON_SVG;
+                            img.onerror = null;
+                        }
                     } else {
                         img.src = DEFAULT_FAVICON_SVG;
                         img.onerror = null;
@@ -683,8 +693,16 @@ function renderGrid() {
         const img = div.querySelector('img');
         if (img) {
             img.onerror = () => {
-                if (!img.src.startsWith('chrome-extension://')) {
+                if (!isFirefox() && !img.src.startsWith('chrome-extension://')) {
                     img.src = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(item.url)}&size=64`;
+                } else if (isFirefox() && !img.src.includes('icons.duckduckgo.com')) {
+                    try {
+                        const urlObj = new URL(item.url);
+                        img.src = `https://icons.duckduckgo.com/ip3/${urlObj.hostname}.ico`;
+                    } catch (e) {
+                        img.src = DEFAULT_FAVICON_SVG;
+                        img.onerror = null;
+                    }
                 } else {
                     img.src = DEFAULT_FAVICON_SVG;
                     img.onerror = null;

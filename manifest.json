@@ -1,11 +1,15 @@
 {
   "manifest_version": 3,
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "kokpit@uparlayan.github.io"
+    }
+  },
   "name": "Kişisel Yeni Sekme",
   "version": "1.0",
   "description": "Kendi özel komuta merkezim.",
   "permissions": [
-    "windows",
-    "favicon"
+    "storage"
   ],
   "chrome_url_overrides": {
     "newtab": "kokpit.html"
