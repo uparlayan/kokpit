@@ -2,6 +2,7 @@ const isFirefox = () => typeof browser !== 'undefined';
 
 const kokpitData = {
     currentProfileName: "Varsayılan",
+    activeTheme: "dark", // v1.1 Yeni Özellik: Tema Desteği
     profiles: [
         {
             name: "Varsayılan",
@@ -136,6 +137,13 @@ function loadData() {
         if (rightResizer) rightResizer.classList.add("hidden");
     }
 
+    // Arayüz ayarlarını uygula
+    if (kokpitData.activeTheme) {
+        applyTheme(kokpitData.activeTheme);
+    } else {
+        applyTheme("dark");
+    }
+
     renderAll();
 }
 
@@ -174,12 +182,40 @@ function saveData() {
     renderAll();
 }
 
+// Tema Yönetimi Fonksiyonları (Global Kapsam)
+function applyTheme(themeName) {
+    document.body.setAttribute("data-theme", themeName);
+    kokpitData.activeTheme = themeName;
+    
+    // Modal içindeki aktif durumu güncelle
+    document.querySelectorAll(".theme-option").forEach(opt => {
+        if (opt.dataset.theme === themeName) {
+            opt.classList.add("active");
+        } else {
+            opt.classList.remove("active");
+        }
+    });
+}
+
+function openThemeModal() {
+    const modal = document.getElementById("themeModal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeThemeModal() {
+    const modal = document.getElementById("themeModal");
+    if (modal) modal.style.display = "none";
+}
+
 function renderAll() {
     renderSidebar();
     renderGrid();
     renderAuthUsers();
     renderNotes();
     
+    // Temayı uygula (DOM elemanları render edildikten sonra modal durumunu güncellemek için)
+    if (kokpitData.activeTheme) applyTheme(kokpitData.activeTheme);
+
     const profileBtn = document.getElementById("profileBtn");
     const activeProfile = getActiveProfile();
     if (profileBtn && activeProfile) {
@@ -602,7 +638,8 @@ function renderSidebar() {
         if (item.type === 'folder') {
             const icon = document.createElement("span");
             icon.className = "folder-icon";
-            icon.textContent = "▶";
+            const stateKey = `folder_${pathStr}_open`;
+            icon.textContent = kokpitData[stateKey] ? "📂" : "📁";
             infoDiv.appendChild(icon);
         } else {
             const img = document.createElement("img");
@@ -663,6 +700,12 @@ function renderSidebar() {
                 div.classList.toggle("open");
                 contentDiv.classList.toggle("open");
                 kokpitData[stateKey] = div.classList.contains("open");
+                
+                // İkonu güncelle
+                const icon = div.querySelector(".folder-icon");
+                if (icon) {
+                    icon.textContent = kokpitData[stateKey] ? "📂" : "📁";
+                }
             });
             
             parentContainer.appendChild(div);
@@ -1204,6 +1247,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    const btnTheme = document.getElementById("btnTheme");
+    if (btnTheme) btnTheme.addEventListener("click", openThemeModal);
+    
+    const btnCloseThemeModal = document.getElementById("btnCloseThemeModal");
+    if (btnCloseThemeModal) btnCloseThemeModal.addEventListener("click", closeThemeModal);
+
+    document.querySelectorAll(".theme-option").forEach(option => {
+        option.addEventListener("click", () => {
+            const theme = option.dataset.theme;
+            applyTheme(theme);
+            saveData();
+        });
+    });
+
     document.getElementById("itemUrl").addEventListener("keypress", function(event) {
         if (event.key === "Enter") { event.preventDefault(); saveItem(); }
     });
@@ -1259,4 +1316,7 @@ window.addEventListener("click", function(event) {
 
     const authUserModal = document.getElementById("authUserModal");
     if (event.target === authUserModal) closeAuthUserModal();
+
+    const themeModal = document.getElementById("themeModal");
+    if (event.target === themeModal) closeThemeModal();
 });

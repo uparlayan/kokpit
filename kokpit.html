@@ -40,6 +40,7 @@
                     <span>Varsayılan</span>
                 </div>
                 <button id="btnNewPersonalTab" class="toggle-btn" title="Kişisel Yeni Sekme">⚙️</button>
+                <button id="btnTheme" class="toggle-btn" title="Tema Değiştir">🎨</button>
                 <button id="toggleRightSidebar" class="toggle-btn" title="Sağ Menüyü Aç/Kapat">☰</button>
             </div>
         </div>
@@ -205,6 +206,38 @@
                     <button id="btnCancelNote" class="cancel">İptal</button>
                     <button id="btnSaveNote" class="primary">Kaydet</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMA SEÇİCİ MODAL -->
+    <div id="themeModal" class="modal">
+        <div class="modal-content">
+            <h3>Tema Seçin</h3>
+            <div class="theme-grid">
+                <div class="theme-option active" data-theme="dark">
+                    <div class="theme-preview preview-dark"></div>
+                    <span>Karanlık</span>
+                </div>
+                <div class="theme-option" data-theme="light">
+                    <div class="theme-preview preview-light"></div>
+                    <span>Aydınlık</span>
+                </div>
+                <div class="theme-option" data-theme="ocean">
+                    <div class="theme-preview preview-ocean"></div>
+                    <span>Okyanus</span>
+                </div>
+                <div class="theme-option" data-theme="sunset">
+                    <div class="theme-preview preview-sunset"></div>
+                    <span>Gün Batımı</span>
+                </div>
+                <div class="theme-option" data-theme="forest">
+                    <div class="theme-preview preview-forest"></div>
+                    <span>Orman</span>
+                </div>
+            </div>
+            <div class="modal-actions flex-end">
+                <button id="btnCloseThemeModal" class="cancel">Kapat</button>
             </div>
         </div>
     </div>

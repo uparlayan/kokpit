@@ -1,4 +1,4 @@
-# Kokpit - Personal New Tab / Kişisel Yeni Sekme
+# Kokpit - Personal New Tab / Kişisel Yeni Sekme (v1.1)
 
 [English](#english) | [Türkçe](#türkçe)
 
@@ -9,6 +9,7 @@
 
 ### ✨ Key Features
 *   **🌐 Multi-Browser:** Supports **Chrome** and **Firefox** (MV3).
+*   **🎨 Dynamic Themes:** Choose from 5 beautiful themes (Dark, Light, Ocean, Sunset, Forest) with glassmorphism.
 *   **🚀 Custom Grid:** Organize top sites in a visual grid.
 *   **🖼️ Smart Favicons:** Multi-stage loading (Google S2 & DuckDuckGo).
 *   **📂 Sidebar:** Hierarchical favorites (up to 3 levels).
@@ -31,6 +32,7 @@
 
 ### ✨ Öne Çıkan Özellikler
 *   **🌐 Çoklu Tarayıcı:** **Chrome** ve **Firefox** (MV3) ile tam uyumlu.
+*   **🎨 Dinamik Temalar:** Karanlık, Aydınlık, Okyanus, Gün Batımı ve Orman temalarıyla arayüzü kişiselleştirin.
 *   **🚀 Özel Izgara:** En çok kullandığınız siteleri görsel bir ızgarada düzenleyin.
 *   **🖼️ Akıllı Favicon:** Çok aşamalı ikon yükleme (Google S2 & DuckDuckGo).
 *   **📂 Yan Menü:** 3 seviyeye kadar favori ve klasör yönetimi.

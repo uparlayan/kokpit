@@ -1,10 +1,81 @@
+:root {
+    /* Varsayılan Karanlık Tema (Default Dark) */
+    --bg-main: #202124;
+    --bg-sidebar: #171717;
+    --bg-item-hover: #303134;
+    --bg-item-active: #3c4043;
+    --text-main: #e8eaed;
+    --text-dim: #9aa0a6;
+    --accent: #8ab4f8;
+    --border-color: #333;
+    --scrollbar-track: #202124;
+    --scrollbar-thumb: #5f6368;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* Tema Tanımlamaları */
+[data-theme="light"] {
+    --bg-main: #f1f3f4;
+    --bg-sidebar: #ffffff;
+    --bg-item-hover: #e8eaed;
+    --bg-item-active: #dee1e5;
+    --text-main: #202124;
+    --text-dim: #5f6368;
+    --accent: #1a73e8;
+    --border-color: #dadce0;
+    --scrollbar-track: #f1f3f4;
+    --scrollbar-thumb: #bdc1c6;
+    --glass-bg: rgba(0, 0, 0, 0.03);
+    --glass-border: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="ocean"] {
+    --bg-main: #0b192e;
+    --bg-sidebar: #050c1b;
+    --bg-item-hover: #172a45;
+    --bg-item-active: #303c55;
+    --text-main: #e6f1ff;
+    --text-dim: #8892b0;
+    --accent: #64ffda;
+    --border-color: #112240;
+    --scrollbar-track: #0b192e;
+    --scrollbar-thumb: #233554;
+}
+
+[data-theme="sunset"] {
+    --bg-main: #2d1b2e;
+    --bg-sidebar: #1e121e;
+    --bg-item-hover: #4a2c4a;
+    --bg-item-active: #663d66;
+    --text-main: #fff0f0;
+    --text-dim: #b399b3;
+    --accent: #ff7e5f;
+    --border-color: #3d253d;
+    --scrollbar-track: #2d1b2e;
+    --scrollbar-thumb: #663d66;
+}
+
+[data-theme="forest"] {
+    --bg-main: #1a1f1a;
+    --bg-sidebar: #121512;
+    --bg-item-hover: #2d362d;
+    --bg-item-active: #404d40;
+    --text-main: #e0eee0;
+    --text-dim: #8a9a8a;
+    --accent: #7cfc00;
+    --border-color: #262c26;
+    --scrollbar-track: #1a1f1a;
+    --scrollbar-thumb: #404d40;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     font-family: "Segoe UI", Roboto, Arial, sans-serif;
     scrollbar-width: thin;
-    scrollbar-color: #5f6368 #202124;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 /* Özel Scrollbar (Tarayıcı Uyumluluğu) */
@@ -14,35 +85,37 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: #202124;
+    background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #5f6368;
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #8ab4f8;
+    background: var(--accent);
 }
 
 body {
     display: flex;
     height: 100vh;
-    background-color: #202124;
-    color: #fff;
+    background-color: var(--bg-main);
+    color: var(--text-main);
     overflow: hidden;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 /* Sol Menü */
 .sidebar {
     width: 250px;
     min-width: 250px;
-    background-color: #171717;
+    background-color: var(--bg-sidebar);
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #333;
+    border-right: 1px solid var(--border-color);
     overflow-y: auto;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
 .sidebar.hidden {
@@ -51,7 +124,7 @@ body {
 
 .sidebar-title {
     margin: 0;
-    color: #e8eaed;
+    color: var(--text-main);
     font-size: 14px;
     letter-spacing: 1px;
     text-align: left;
@@ -62,7 +135,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 15px 20px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .header-actions {
@@ -73,7 +146,7 @@ body {
 .action-btn {
     background: none;
     border: none;
-    color: #9aa0a6;
+    color: var(--text-dim);
     cursor: pointer;
     font-size: 16px;
     padding: 4px;
@@ -87,8 +160,8 @@ body {
 }
 
 .action-btn:hover {
-    background-color: #303134;
-    color: #fff;
+    background-color: var(--bg-item-hover);
+    color: var(--text-main);
 }
 
 .sidebar.hidden {
@@ -101,13 +174,13 @@ body {
     align-items: center;
     gap: 12px;
     padding: 12px 24px;
-    color: #e8eaed;
+    color: var(--text-main);
     text-decoration: none;
     transition: background 0.2s;
 }
 
 .sidebar-item:hover {
-    background-color: #303134;
+    background-color: var(--bg-item-hover);
 }
 
 .sidebar-item img {
@@ -118,17 +191,17 @@ body {
 .add-btn {
     background: none;
     border: none;
-    color: #8ab4f8;
+    color: var(--accent);
     padding: 15px 24px;
     text-align: left;
     cursor: pointer;
     font-size: 14px;
     font-weight: bold;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-color);
 }
 
 .add-btn:hover {
-    background-color: #303134;
+    background-color: var(--bg-item-hover);
 }
 
 /* Ana İçerik */
@@ -160,9 +233,9 @@ body {
 }
 
 .toggle-btn {
-    background-color: #303134;
+    background-color: var(--bg-item-hover);
     border: none;
-    color: #e8eaed;
+    color: var(--text-main);
     font-size: 20px;
     cursor: pointer;
     width: 36px;
@@ -175,7 +248,7 @@ body {
 }
 
 .toggle-btn:hover {
-    background-color: #3c4043;
+    background-color: var(--bg-item-active);
 }
 
 .toggle-btn:active {
@@ -185,7 +258,7 @@ body {
 .profile-button {
     display: flex;
     align-items: center;
-    background-color: #303134;
+    background-color: var(--bg-item-hover);
     border-radius: 20px;
     padding: 4px 12px 4px 4px;
     cursor: pointer;
@@ -193,7 +266,7 @@ body {
 }
 
 .profile-button:hover {
-    background-color: #3c4043;
+    background-color: var(--bg-item-active);
 }
 
 .profile-button .profile-icon {
@@ -205,7 +278,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 18px;
-    background-color: #3f3f3f;
+    background-color: var(--bg-item-active);
 }
 
 .profile-button span {
@@ -224,9 +297,9 @@ body {
     width: 100%;
     padding: 15px 24px;
     border-radius: 24px;
-    border: 1px solid #5f6368;
-    background-color: #202124;
-    color: #fff;
+    border: 1px solid var(--text-dim);
+    background-color: var(--bg-main);
+    color: var(--text-main);
     font-size: 16px;
     outline: none;
     transition: 0.2s;
@@ -234,7 +307,7 @@ body {
 
 .search-container input:hover,
 .search-container input:focus {
-    background-color: #303134;
+    background-color: var(--bg-item-hover);
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
 }
 
@@ -254,7 +327,7 @@ body {
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    color: #e8eaed;
+    color: var(--text-main);
     width: 110px;
     height: 110px;
     border-radius: 8px;
@@ -263,14 +336,14 @@ body {
 }
 
 .shortcut:hover {
-    background-color: #303134;
+    background-color: var(--bg-item-hover);
 }
 
 .shortcut img {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background-color: #3f3f3f;
+    background-color: var(--bg-item-active);
     padding: 10px;
     margin-bottom: 5px;
 }
@@ -291,8 +364,8 @@ body {
     right: 4px;
     width: 24px;
     height: 24px;
-    background-color: #3c4043;
-    color: #fff;
+    background-color: var(--bg-item-active);
+    color: var(--text-main);
     border: none;
     border-radius: 50%;
     font-size: 14px;
@@ -304,7 +377,7 @@ body {
 }
 
 .edit-btn:hover {
-    background-color: #5f6368;
+    background-color: var(--text-dim);
 }
 
 .shortcut:hover .edit-btn,
@@ -314,11 +387,11 @@ body {
 
 /* Grid Yeni Ekle Butonu */
 .shortcut.add-new {
-    border: 1px dashed #5f6368;
+    border: 1px dashed var(--text-dim);
 }
 
 .shortcut.add-new:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--glass-bg);
 }
 
 /* Modal (Popup) Tasarımı */
@@ -336,11 +409,12 @@ body {
 }
 
 .modal-content {
-    background-color: #292a2d;
+    background-color: var(--bg-main);
     padding: 24px;
-    border-radius: 8px;
+    border-radius: 12px;
     width: 350px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
 }
 
 .modal-content.wide {
@@ -361,22 +435,23 @@ body {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s;
+    color: var(--text-main);
 }
 
 .profile-list-item:hover {
-    background-color: #3c4043;
+    background-color: var(--bg-item-hover);
 }
 
 .profile-list-item.active {
-    background-color: #8ab4f8;
-    color: #202124;
+    background-color: var(--accent);
+    color: var(--bg-sidebar);
     font-weight: bold;
 }
 
 .profile-actions button {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--text-main);
     cursor: pointer;
     opacity: 0.7;
     transition: opacity 0.2s;
@@ -400,15 +475,15 @@ body {
     margin-right: 8px;
     padding: 10px;
     border-radius: 4px;
-    border: 1px solid #5f6368;
-    background-color: #202124;
-    color: #fff;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-main);
+    color: var(--text-main);
     outline: none;
 }
 
 .modal-content h3 {
     margin-bottom: 16px;
-    color: #e8eaed;
+    color: var(--text-main);
 }
 
 .input-group {
@@ -419,7 +494,7 @@ body {
 
 .input-group label {
     font-size: 12px;
-    color: #9aa0a6;
+    color: var(--text-dim);
     margin-bottom: 6px;
 }
 
@@ -428,9 +503,9 @@ body {
 .input-group textarea {
     padding: 10px;
     border-radius: 4px;
-    border: 1px solid #5f6368;
-    background-color: #202124;
-    color: #fff;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-main);
+    color: var(--text-main);
     outline: none;
     font-family: inherit;
     font-size: 14px;
@@ -440,12 +515,8 @@ body {
     resize: vertical;
 }
 
-.input-group input[type="number"] {
-    margin-bottom: 5px;
-}
-
 .input-group small {
-    color: #888;
+    color: var(--text-dim);
     display: block;
     margin-top: 5px;
     margin-bottom: 5px;
@@ -472,22 +543,27 @@ button {
     border: none;
     cursor: pointer;
     font-weight: bold;
+    transition: transform 0.1s, background-color 0.2s;
+}
+
+button:active {
+    transform: scale(0.95);
 }
 
 button.primary {
-    background-color: #8ab4f8;
-    color: #202124;
+    background-color: var(--accent);
+    color: var(--bg-sidebar);
 }
 
 button.cancel {
     background-color: transparent;
-    color: #8ab4f8;
-    border: 1px solid #5f6368;
+    color: var(--accent);
+    border: 1px solid var(--border-color);
 }
 
 button.danger {
     background-color: #f28b82;
-    color: #202124;
+    color: #fff;
 }
 
 button.danger[style*="display: none"] {
@@ -507,6 +583,30 @@ button.danger[style*="display: none"] {
     background-color: rgba(138, 180, 248, 0.1);
 }
 
+.shortcut.add-new {
+    border: 1px dashed var(--border-color);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    outline: none;
+}
+
+/* Notlar Bölümü Yerleşimi */
+.notes-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.notes-items-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 /* Sidebar Alt Kısım ve Yedekleme Butonları */
 .sidebar-bottom {
     margin-top: auto;
@@ -516,14 +616,14 @@ button.danger[style*="display: none"] {
 
 .sidebar-footer {
     display: flex;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-color);
 }
 
 .footer-btn {
     flex: 1;
     background: none;
     border: none;
-    color: #9aa0a6;
+    color: var(--text-dim);
     padding: 12px 0;
     cursor: pointer;
     font-size: 13px;
@@ -532,36 +632,23 @@ button.danger[style*="display: none"] {
 }
 
 .footer-btn:hover {
-    background-color: #303134;
-    color: #fff;
-}
-
-/* İkon (Favicon) yüklenemezse veya kırık gelirse onu gizle ve arkasındaki beyaz yuvarlağı göster */
-.shortcut img {
-    position: relative;
-    /* (Mevcut img CSS kurallarınız aynen kalsın, sadece altına şu satırları ekleyin) */
-    text-indent: -10000px;
-    /* "Kırık resim" yazısını görünmez yapar */
-    overflow: hidden;
-}
-
-/* Sidebar için de aynısı */
-.sidebar-item img {
-    position: relative;
-    text-indent: -10000px;
+    background-color: var(--bg-item-hover);
+    color: var(--text-main);
 }
 
 /* Sağ Menü (AuthUser) */
 .right-sidebar {
     width: 250px;
     min-width: 250px;
-    background-color: #171717;
+    background-color: var(--bg-sidebar);
     display: flex;
     flex-direction: column;
-    border-left: 1px solid #333;
+    border-left: 1px solid var(--border-color);
     overflow-y: auto;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
+.sidebar.hidden, 
 .right-sidebar.hidden {
     display: none !important;
 }
@@ -570,7 +657,7 @@ button.danger[style*="display: none"] {
     display: flex;
     flex-direction: column;
     flex: 1;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
     overflow: hidden;
     min-height: 100px;
 }
@@ -583,36 +670,33 @@ button.danger[style*="display: none"] {
 .auth-item {
     padding: 12px 24px;
     cursor: pointer;
-    /*border-bottom: 1px solid #333;*/
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: background 0.2s;
+    color: var(--text-main);
 }
 
 .auth-item:hover {
-    background-color: #303134;
+    background-color: var(--bg-item-hover);
 }
 
 .auth-item.active {
-    background-color: #303134;
-    color: #e8eaed;
-}
-
-.auth-item.active .edit-btn-auth {
-    color: #8ab4f8;
+    background-color: var(--bg-item-hover);
+    color: var(--text-main);
 }
 
 .edit-btn-auth {
     padding: 5px;
     background: none;
     border: none;
-    color: #8ab4f8;
+    color: var(--accent);
     cursor: pointer;
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.2s;
     margin-left: auto;
+    font-size: 14px;
 }
 
 .auth-item:hover .edit-btn-auth {
@@ -631,44 +715,43 @@ button.danger[style*="display: none"] {
 }
 
 .auth-no-bubble {
-    background-color: #3c4043;
-    color: #fff;
+    background-color: var(--bg-item-active);
+    color: var(--text-main);
     border-radius: 50%;
     width: 24px;
     height: 24px;
     min-width: 24px;
-    min-height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 12px;
     font-weight: bold;
-    flex-shrink: 0;
 }
 
 .auth-item.active .auth-no-bubble {
-    background-color: #8ab4f8;
-    color: #202124;
+    background-color: var(--accent);
+    color: var(--bg-main);
 }
 
 /* Sidebar Klasör, Splitter ve Ağaç (Tree) Görünümü */
 .sidebar-splitter {
     height: 1px;
-    background-color: #333;
+    background-color: var(--border-color);
     margin: 8px 15px;
     cursor: default;
 }
 
 .folder-icon {
-    font-size: 10px;
-    transition: transform 0.2s;
+    font-size: 14px;
     display: inline-block;
-    width: 14px;
+    width: 20px;
     text-align: center;
+    color: var(--text-dim);
 }
 
 .sidebar-folder.open .folder-icon {
-    transform: rotate(90deg);
+    /* Emojiler dönmeyecek */
+    transform: none;
 }
 
 .folder-content {
@@ -683,53 +766,30 @@ button.danger[style*="display: none"] {
 .folder-depth-1,
 .folder-depth-2,
 .folder-depth-3 {
-    border-left: 1px solid #333;
+    border-left: 1px solid var(--border-color);
     margin-left: 10px;
 }
 
-.folder-depth-1,
-.folder-depth-2,
-.folder-depth-3 {
-    border-left: 1px solid #333;
-    margin-left: 10px;
-}
-
-/* Notlar Bölümü */
-.notes-section {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-}
-
-.notes-items-container {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
+/* Notlar */
 .note-item {
-    background-color: #292a2d;
+    background-color: var(--bg-sidebar);
     padding: 12px;
-    border-radius: 6px;
-    border: 1px solid #3c4043;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
     position: relative;
     cursor: pointer;
     transition: background-color 0.2s, border-left 0.2s;
-    border-left: 4px solid #3c4043;
+    border-left: 4px solid var(--bg-item-active);
 }
-
-.note-item.blue { border-left-color: #8ab4f8; background-color: rgba(138, 180, 248, 0.1); }
-.note-item.pink { border-left-color: #f28b82; background-color: rgba(242, 139, 130, 0.1); }
-.note-item.green { border-left-color: #81c995; background-color: rgba(129, 201, 149, 0.1); }
-.note-item.yellow { border-left-color: #fdd663; background-color: rgba(253, 214, 99, 0.1); }
 
 .note-item:hover {
-    background-color: #303134;
+    background-color: var(--bg-item-hover);
 }
+
+.note-item.blue { border-left-color: #8ab4f8; background-color: rgba(138, 180, 248, 0.08); }
+.note-item.pink { border-left-color: #f28b82; background-color: rgba(242, 139, 130, 0.08); }
+.note-item.green { border-left-color: #81c995; background-color: rgba(129, 201, 149, 0.08); }
+.note-item.yellow { border-left-color: #fdd663; background-color: rgba(253, 214, 99, 0.08); }
 
 .note-item.blue:hover { background-color: rgba(138, 180, 248, 0.15); }
 .note-item.pink:hover { background-color: rgba(242, 139, 130, 0.15); }
@@ -738,7 +798,7 @@ button.danger[style*="display: none"] {
 
 .note-text {
     font-size: 13px;
-    color: #e8eaed;
+    color: var(--text-main);
     white-space: pre-wrap;
     word-break: break-word;
     display: -webkit-box;
@@ -763,14 +823,14 @@ button.danger[style*="display: none"] {
 .note-btn {
     background: none;
     border: none;
-    color: #8ab4f8;
+    color: var(--accent);
     cursor: pointer;
     font-size: 14px;
     padding: 2px;
 }
 
 .note-btn:hover {
-    color: #fff;
+    color: var(--text-main);
 }
 
 /* Renk Seçer (Note Modal) */
@@ -794,11 +854,11 @@ button.danger[style*="display: none"] {
 }
 
 .color-dot.active {
-    border-color: #fff;
+    border-color: var(--text-main);
     transform: scale(1.1);
 }
 
-.color-dot.default { background-color: #292a2d; border: 1px solid #5f6368; }
+.color-dot.default { background-color: var(--bg-item-active); border: 1px solid var(--border-color); }
 .color-dot.blue { background-color: #8ab4f8; }
 .color-dot.pink { background-color: #f28b82; }
 .color-dot.green { background-color: #81c995; }
@@ -814,13 +874,9 @@ button.danger[style*="display: none"] {
     flex-shrink: 0;
 }
 
-.resizer.hidden {
-    display: none !important;
-}
-
 .resizer:hover,
 .resizer.resizing {
-    background-color: #8ab4f8;
+    background-color: var(--accent);
 }
 
 .h-resizer {
@@ -834,15 +890,47 @@ button.danger[style*="display: none"] {
 
 .h-resizer:hover,
 .h-resizer.resizing {
-    background-color: #8ab4f8;
+    background-color: var(--accent);
 }
 
-body.resizing {
-    cursor: col-resize;
-    user-select: none;
+/* Tema Seçici Özel */
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
 }
 
-body.resizing-h {
-    cursor: row-resize;
-    user-select: none;
+.theme-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: 0.2s;
+    color: var(--text-main);
+    background-color: var(--bg-sidebar);
 }
+
+.theme-option:hover {
+    background-color: var(--bg-item-hover);
+}
+
+.theme-option.active {
+    border-color: var(--accent);
+    background-color: var(--bg-item-hover);
+}
+
+.theme-preview {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.preview-dark { background: #202124; }
+.preview-light { background: #f1f3f4; }
+.preview-ocean { background: #0b192e; }
+.preview-sunset { background: #2d1b2e; }
+.preview-forest { background: #1a1f1a; }

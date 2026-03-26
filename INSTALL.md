@@ -1,4 +1,4 @@
-# Kokpit Kurulum Rehberi / Installation Guide
+# Kokpit Kurulum Rehberi / Installation Guide (v1.1)
 
 Bu belge, Kokpit eklentisini Chrome ve Firefox tarayıcılarına nasıl kuracağınızı adım adım açıklamaktadır.
 
