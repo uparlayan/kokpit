@@ -314,10 +314,14 @@ body {
 /* Grid */
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 20px;
-    max-width: 800px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 1100px;
+    padding: 10px;
     padding-bottom: 50px;
+    box-sizing: border-box;
+    margin: 0 auto;
 }
 
 .shortcut {
@@ -328,7 +332,8 @@ body {
     justify-content: center;
     text-decoration: none;
     color: var(--text-main);
-    width: 110px;
+    width: 100%;
+    max-width: 110px;
     height: 110px;
     border-radius: 8px;
     transition: background 0.2s;
@@ -340,11 +345,11 @@ body {
 }
 
 .shortcut img {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background-color: var(--bg-item-active);
-    padding: 10px;
+    padding: 8px;
     margin-bottom: 5px;
 }
 
@@ -688,7 +693,7 @@ button.danger:hover {
     transition: background-color 0.3s, border-color 0.3s;
 }
 
-.sidebar.hidden, 
+.sidebar.hidden,
 .right-sidebar.hidden {
     display: none !important;
 }
@@ -704,11 +709,9 @@ button.danger:hover {
     border-bottom: none !important;
 }
 
-.auth-section.collapsed .section-toggle {
-    /* v1.1.12: Emoji dönmesin diye rotate kaldırıldı */
-}
+/* v1.1.12: Emoji dönmesin diye kural kaldırıldı */
 
-.auth-section.collapsed + #middleResizer {
+.auth-section.collapsed+#middleResizer {
     display: none;
 }
 
@@ -844,26 +847,89 @@ button.danger:hover {
     background-color: var(--bg-item-hover);
 }
 
-.note-item.blue { border-color: #8ab4f8; background-color: rgba(138, 180, 248, 0.08); color: #8ab4f8; }
-.note-item.pink { border-color: #f28b82; background-color: rgba(242, 139, 130, 0.08); color: #f28b82; }
-.note-item.green { border-color: #81c995; background-color: rgba(129, 201, 149, 0.08); color: #81c995; }
-.note-item.yellow { border-color: #fdd663; background-color: rgba(253, 214, 99, 0.08); color: #fdd663; }
-.note-item.purple { border-color: #d291ff; background-color: rgba(210, 145, 255, 0.08); color: #d291ff; }
-.note-item.orange { border-color: #f69d50; background-color: rgba(246, 157, 80, 0.08); color: #f69d50; }
+.note-item.blue {
+    border-color: #8ab4f8;
+    background-color: rgba(138, 180, 248, 0.08);
+    color: #8ab4f8;
+}
 
-.note-item.blue .note-text { color: #8ab4f8; }
-.note-item.pink .note-text { color: #f28b82; }
-.note-item.green .note-text { color: #81c995; }
-.note-item.yellow .note-text { color: #fdd663; }
-.note-item.purple .note-text { color: #d291ff; }
-.note-item.orange .note-text { color: #f69d50; }
+.note-item.pink {
+    border-color: #f28b82;
+    background-color: rgba(242, 139, 130, 0.08);
+    color: #f28b82;
+}
 
-.note-item.blue:hover { background-color: rgba(138, 180, 248, 0.15); }
-.note-item.pink:hover { background-color: rgba(242, 139, 130, 0.15); }
-.note-item.green:hover { background-color: rgba(129, 201, 149, 0.15); }
-.note-item.yellow:hover { background-color: rgba(253, 214, 99, 0.15); }
-.note-item.purple:hover { background-color: rgba(210, 145, 255, 0.15); }
-.note-item.orange:hover { background-color: rgba(246, 157, 80, 0.15); }
+.note-item.green {
+    border-color: #81c995;
+    background-color: rgba(129, 201, 149, 0.08);
+    color: #81c995;
+}
+
+.note-item.yellow {
+    border-color: #fdd663;
+    background-color: rgba(253, 214, 99, 0.08);
+    color: #fdd663;
+}
+
+.note-item.purple {
+    border-color: #d291ff;
+    background-color: rgba(210, 145, 255, 0.08);
+    color: #d291ff;
+}
+
+.note-item.orange {
+    border-color: #f69d50;
+    background-color: rgba(246, 157, 80, 0.08);
+    color: #f69d50;
+}
+
+.note-item.blue .note-text {
+    color: #8ab4f8;
+}
+
+.note-item.pink .note-text {
+    color: #f28b82;
+}
+
+.note-item.green .note-text {
+    color: #81c995;
+}
+
+.note-item.yellow .note-text {
+    color: #fdd663;
+}
+
+.note-item.purple .note-text {
+    color: #d291ff;
+}
+
+.note-item.orange .note-text {
+    color: #f69d50;
+}
+
+.note-item.blue:hover {
+    background-color: rgba(138, 180, 248, 0.15);
+}
+
+.note-item.pink:hover {
+    background-color: rgba(242, 139, 130, 0.15);
+}
+
+.note-item.green:hover {
+    background-color: rgba(129, 201, 149, 0.15);
+}
+
+.note-item.yellow:hover {
+    background-color: rgba(253, 214, 99, 0.15);
+}
+
+.note-item.purple:hover {
+    background-color: rgba(210, 145, 255, 0.15);
+}
+
+.note-item.orange:hover {
+    background-color: rgba(246, 157, 80, 0.15);
+}
 
 .note-dot {
     font-size: 8px;
@@ -943,25 +1009,66 @@ button.danger:hover {
     transform: scale(1.1);
 }
 
-.color-dot.blue.active { border-color: #8ab4f8; }
-.color-dot.pink.active { border-color: #f28b82; }
-.color-dot.green.active { border-color: #81c995; }
-.color-dot.yellow.active { border-color: #fdd663; }
-.color-dot.purple.active { border-color: #d291ff; }
-.color-dot.orange.active { border-color: #f69d50; }
-.color-dot.default.active { border-color: var(--accent); }
+.color-dot.blue.active {
+    border-color: #8ab4f8;
+}
+
+.color-dot.pink.active {
+    border-color: #f28b82;
+}
+
+.color-dot.green.active {
+    border-color: #81c995;
+}
+
+.color-dot.yellow.active {
+    border-color: #fdd663;
+}
+
+.color-dot.purple.active {
+    border-color: #d291ff;
+}
+
+.color-dot.orange.active {
+    border-color: #f69d50;
+}
+
+.color-dot.default.active {
+    border-color: var(--accent);
+}
 
 .color-dot.active::after {
     opacity: 1;
 }
 
-.color-dot.default { background-color: var(--bg-item-active); border: 1px solid var(--border-color); }
-.color-dot.blue { background-color: #8ab4f8; }
-.color-dot.pink { background-color: #f28b82; }
-.color-dot.green { background-color: #81c995; }
-.color-dot.yellow { background-color: #fdd663; }
-.color-dot.purple { background-color: #d291ff; }
-.color-dot.orange { background-color: #f69d50; }
+.color-dot.default {
+    background-color: var(--bg-item-active);
+    border: 1px solid var(--border-color);
+}
+
+.color-dot.blue {
+    background-color: #8ab4f8;
+}
+
+.color-dot.pink {
+    background-color: #f28b82;
+}
+
+.color-dot.green {
+    background-color: #81c995;
+}
+
+.color-dot.yellow {
+    background-color: #fdd663;
+}
+
+.color-dot.purple {
+    background-color: #d291ff;
+}
+
+.color-dot.orange {
+    background-color: #f69d50;
+}
 
 /* Panel Resizers */
 .resizer {
@@ -1025,11 +1132,25 @@ button.danger:hover {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.preview-dark { background: #202124; }
-.preview-light { background: #f1f3f4; }
-.preview-ocean { background: #0b192e; }
-.preview-sunset { background: #2d1b2e; }
-.preview-forest { background: #1a1f1a; }
+.preview-dark {
+    background: #202124;
+}
+
+.preview-light {
+    background: #f1f3f4;
+}
+
+.preview-ocean {
+    background: #0b192e;
+}
+
+.preview-sunset {
+    background: #2d1b2e;
+}
+
+.preview-forest {
+    background: #1a1f1a;
+}
