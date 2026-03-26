@@ -592,9 +592,14 @@ function renderSidebar() {
         if (item.type !== 'folder') {
             const img = div.querySelector('img');
             if (img) {
-                img.addEventListener('error', function() {
-                    this.src = DEFAULT_FAVICON_SVG;
-                }, { once: true });
+                img.onerror = () => {
+                    if (!img.src.startsWith('chrome-extension://')) {
+                        img.src = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(item.url)}&size=64`;
+                    } else {
+                        img.src = DEFAULT_FAVICON_SVG;
+                        img.onerror = null;
+                    }
+                };
             }
         }
 
@@ -677,9 +682,14 @@ function renderGrid() {
         
         const img = div.querySelector('img');
         if (img) {
-            img.addEventListener('error', function() {
-                this.src = DEFAULT_FAVICON_SVG;
-            }, { once: true });
+            img.onerror = () => {
+                if (!img.src.startsWith('chrome-extension://')) {
+                    img.src = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(item.url)}&size=64`;
+                } else {
+                    img.src = DEFAULT_FAVICON_SVG;
+                    img.onerror = null;
+                }
+            };
         }
 
         const editBtn = document.createElement("button");

@@ -4,7 +4,8 @@
   "version": "1.0",
   "description": "Kendi özel komuta merkezim.",
   "permissions": [
-    "windows"
+    "windows",
+    "favicon"
   ],
   "chrome_url_overrides": {
     "newtab": "kokpit.html"
