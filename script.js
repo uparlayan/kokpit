@@ -203,9 +203,18 @@ function renderProfileList() {
         }
 
         const nameSpan = document.createElement("span");
-        nameSpan.innerHTML = profile.name + 
-            (profile.authUserEmail ? ` <small style="color:#888; font-size: 0.8em; margin-left: 5px;">(${profile.authUserEmail})</small>` : 
-            (profile.authUserNo !== undefined && profile.authUserNo !== "" ? ` <small style="color:#888; font-size: 0.8em; margin-left: 5px;">(Hesap: ${profile.authUserNo})</small>` : ""));
+        nameSpan.textContent = profile.name + " ";
+        if (profile.authUserEmail) {
+            const small = document.createElement("small");
+            small.style.cssText = "color:#888; font-size: 0.8em; margin-left: 5px;";
+            small.textContent = `(${profile.authUserEmail})`;
+            nameSpan.appendChild(small);
+        } else if (profile.authUserNo !== undefined && profile.authUserNo !== "") {
+            const small = document.createElement("small");
+            small.style.cssText = "color:#888; font-size: 0.8em; margin-left: 5px;";
+            small.textContent = `(Hesap: ${profile.authUserNo})`;
+            nameSpan.appendChild(small);
+        }
         item.appendChild(nameSpan);
 
         const actionsDiv = document.createElement("div");
@@ -360,12 +369,15 @@ function renderAuthUsers() {
         const div = document.createElement("div");
         div.className = "auth-item" + (kokpitData.globalActiveAuthNo === item.no ? " active" : "");
         
-        div.innerHTML = `
-            <div class="auth-label">
-                <div class="auth-no-bubble">${item.no}</div>
-                ${item.label || 'İsimsiz'}
-            </div>
-        `;
+        const labelDiv = document.createElement("div");
+        labelDiv.className = "auth-label";
+        const bubble = document.createElement("div");
+        bubble.className = "auth-no-bubble";
+        bubble.textContent = item.no;
+        labelDiv.appendChild(bubble);
+        labelDiv.append(document.createTextNode(item.label || 'İsimsiz'));
+        
+        div.appendChild(labelDiv);
         
         div.addEventListener("click", () => {
             kokpitData.globalActiveAuthNo = item.no;
@@ -584,12 +596,29 @@ function renderSidebar() {
         if(item.type === 'folder') div.classList.add("sidebar-folder");
         else div.style.cursor = "pointer";
 
-        div.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px; pointer-events: none; width: 85%;">
-                ${item.type === 'folder' ? '<span class="folder-icon">▶</span>' : `<img src="${getFavicon(item.url)}" alt="" style="width:20px; height:20px;">`}
-                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
-            </div>
-        `;
+        const infoDiv = document.createElement("div");
+        infoDiv.style.cssText = "display:flex; align-items:center; gap:12px; pointer-events: none; width: 85%;";
+        
+        if (item.type === 'folder') {
+            const icon = document.createElement("span");
+            icon.className = "folder-icon";
+            icon.textContent = "▶";
+            infoDiv.appendChild(icon);
+        } else {
+            const img = document.createElement("img");
+            img.src = getFavicon(item.url);
+            img.alt = "";
+            img.style.width = "20px";
+            img.style.height = "20px";
+            infoDiv.appendChild(img);
+        }
+        
+        const nameText = document.createElement("span");
+        nameText.style.cssText = "white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
+        nameText.textContent = item.name;
+        infoDiv.appendChild(nameText);
+        
+        div.appendChild(infoDiv);
         
         if (item.type !== 'folder') {
             const img = div.querySelector('img');
@@ -683,12 +712,18 @@ function renderGrid() {
         // Sürükle Bırak Olaylarını Ekle
         addDragAndDropHandlers(div, 'grid', index);
 
-        div.innerHTML = `
-            <img src="${getFavicon(item.url)}" alt="" style="pointer-events: none;">
-            <span style="pointer-events: none;">${item.name}</span>
-        `;
+        const img = document.createElement("img");
+        img.src = getFavicon(item.url);
+        img.alt = "";
+        img.style.pointerEvents = "none";
         
-        const img = div.querySelector('img');
+        const span = document.createElement("span");
+        span.style.pointerEvents = "none";
+        span.textContent = item.name;
+        
+        div.appendChild(img);
+        div.appendChild(span);
+        
         if (img) {
             img.onerror = () => {
                 if (!img.src.includes('icons.duckduckgo.com')) {
@@ -840,7 +875,10 @@ function renderNotes() {
         div.className = "note-item";
         if(note.color && note.color !== 'default') div.classList.add(note.color);
         
-        div.innerHTML = `<div class="note-text">${note.text}</div>`;
+        const textDiv = document.createElement("div");
+        textDiv.className = "note-text";
+        textDiv.textContent = note.text;
+        div.appendChild(textDiv);
         
         const actionsDiv = document.createElement("div");
         actionsDiv.className = "note-actions";
