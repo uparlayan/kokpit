@@ -21,72 +21,283 @@ const kokpitData = {
     ]
 };
 
-// v1.4: Cyber-Audio Engine (Synthesized Sounds)
+// v2.0: NEXUS Cyber-Audio Engine — Futuristic Synthesized Sounds
 class SoundManager {
     constructor() {
         this.ctx = null;
         this.masterGain = null;
+        this._lastBeep = 0;
     }
 
     init() {
         if (this.ctx) return;
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
         this.masterGain.connect(this.ctx.destination);
     }
 
-    play(freq, type, duration, volume, rampType = 'exponential') {
+    _t() { return this.ctx.currentTime; }
+
+    // Temel oscilator yardımcısı
+    _osc(freq, type, startTime, stopTime) {
+        const osc = this.ctx.createOscillator();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, startTime);
+        osc.start(startTime);
+        osc.stop(stopTime);
+        return osc;
+    }
+
+    // Gain envelope yardımcısı
+    _env(attack, sustain, release, volume) {
+        const g = this.ctx.createGain();
+        const t = this._t();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(volume, t + attack);
+        g.gain.setValueAtTime(volume, t + attack + sustain);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + attack + sustain + release);
+        return g;
+    }
+
+    // Beyaz gürültü buffer oluşturucu
+    _noise(duration) {
+        const bufferSize = this.ctx.sampleRate * duration;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const source = this.ctx.createBufferSource();
+        source.buffer = buffer;
+        return source;
+    }
+
+    // Biquad filtre yardımcısı
+    _filter(type, freq, Q = 1) {
+        const f = this.ctx.createBiquadFilter();
+        f.type = type;
+        f.frequency.setValueAtTime(freq, this._t());
+        f.Q.setValueAtTime(Q, this._t());
+        return f;
+    }
+
+    // --- HOVER: Nöral tarama sesi (ince, yüksek, titreşimli) ---
+    playBeep() {
+        if (!kokpitData.soundEnabled) return;
+        const now = Date.now();
+        if (now - this._lastBeep < 80) return; // Debounce
+        this._lastBeep = now;
+        this.init();
+        const t = this._t();
+
+        // Frekans sweep: yüksek bir "wip" sesi
+        const osc = this._osc(1800, 'sine', t, t + 0.06);
+        osc.frequency.exponentialRampToValueAtTime(2600, t + 0.06);
+
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.015, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+
+        const filter = this._filter('bandpass', 2200, 8);
+
+        osc.connect(filter);
+        filter.connect(g);
+        g.connect(this.masterGain);
+    }
+
+    playFriction() { this.playBeep(); }
+
+    // --- CLICK: Digital "tik" + neon flaş ---
+    playClick() {
         if (!kokpitData.soundEnabled) return;
         this.init();
-        
-        const osc = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
-        
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        
-        g.gain.setValueAtTime(volume, this.ctx.currentTime);
-        if (rampType === 'exponential') {
-            g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-        } else {
-            g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
-        }
-        
-        osc.connect(g);
-        g.connect(this.masterGain);
-        
-        osc.start();
-        osc.stop(this.ctx.currentTime + duration);
+        const t = this._t();
+
+        // Katman 1: Keskin transient
+        const osc1 = this._osc(600, 'square', t, t + 0.04);
+        osc1.frequency.exponentialRampToValueAtTime(200, t + 0.04);
+        const g1 = this.ctx.createGain();
+        g1.gain.setValueAtTime(0.04, t);
+        g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+
+        // Katman 2: Kısa gürültü "klik"
+        const noise = this._noise(0.02);
+        const noiseFilter = this._filter('bandpass', 3000, 5);
+        const ng = this.ctx.createGain();
+        ng.gain.setValueAtTime(0.025, t);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.02);
+
+        osc1.connect(g1); g1.connect(this.masterGain);
+        noise.connect(noiseFilter); noiseFilter.connect(ng); ng.connect(this.masterGain);
+        noise.start(t); noise.stop(t + 0.02);
     }
 
-    playBeep() { this.playFriction(); }
-    
-    playFriction() { 
-        // Varla yok arası sürtünme sesi (yüksek frekanslı pıtırtı)
-        this.play(2000 + Math.random() * 500, 'sine', 0.02, 0.01, 'linear'); 
-    }
-
-    playClick() { this.play(440, 'square', 0.05, 0.02); }
-
+    // --- SAVE: Onay / başarı — yükselen neon arpej ---
     playSave() {
-        this.play(660, 'sine', 0.1, 0.05);
-        setTimeout(() => this.play(880, 'sine', 0.15, 0.03), 50);
+        if (!kokpitData.soundEnabled) return;
+        this.init();
+        const t = this._t();
+        const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+
+        notes.forEach((freq, i) => {
+            const delay = i * 0.07;
+            const osc = this._osc(freq, 'sine', t + delay, t + delay + 0.25);
+            const osc2 = this._osc(freq * 2, 'sine', t + delay, t + delay + 0.2);
+
+            const g = this.ctx.createGain();
+            g.gain.setValueAtTime(0, t + delay);
+            g.gain.linearRampToValueAtTime(0.04 - i * 0.005, t + delay + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + delay + 0.25);
+
+            const g2 = this.ctx.createGain();
+            g2.gain.setValueAtTime(0.01, t + delay);
+            g2.gain.exponentialRampToValueAtTime(0.0001, t + delay + 0.2);
+
+            const filter = this._filter('lowpass', 3000, 2);
+
+            osc.connect(filter); osc2.connect(filter);
+            filter.connect(g); g.connect(this.masterGain);
+            osc2.connect(g2); g2.connect(this.masterGain);
+        });
+
+        // Üstte bir shimmer: yüksek frekanslı parlama
+        setTimeout(() => {
+            const shimmer = this._osc(4000, 'sine', this._t(), this._t() + 0.15);
+            const sg = this.ctx.createGain();
+            sg.gain.setValueAtTime(0, this._t());
+            sg.gain.linearRampToValueAtTime(0.008, this._t() + 0.03);
+            sg.gain.exponentialRampToValueAtTime(0.0001, this._t() + 0.15);
+            shimmer.connect(sg); sg.connect(this.masterGain);
+        }, 280);
     }
 
+    // --- DELETE: Parçalanma / data yıkım sesi ---
     playDelete() {
-        this.play(220, 'square', 0.2, 0.05);
-        this.play(110, 'square', 0.3, 0.03);
+        if (!kokpitData.soundEnabled) return;
+        this.init();
+        const t = this._t();
+
+        // İniş sweep — veri siliniyor gibi
+        const osc1 = this._osc(400, 'sawtooth', t, t + 0.35);
+        osc1.frequency.exponentialRampToValueAtTime(60, t + 0.35);
+
+        const g1 = this.ctx.createGain();
+        g1.gain.setValueAtTime(0.05, t);
+        g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+
+        const dist = this.ctx.createWaveShaper();
+        const curve = new Float32Array(256);
+        for (let i = 0; i < 256; i++) {
+            const x = (i * 2) / 256 - 1;
+            curve[i] = (Math.PI + 200) * x / (Math.PI + 200 * Math.abs(x));
+        }
+        dist.curve = curve;
+
+        // Gürültü patlaması
+        const noise = this._noise(0.15);
+        const nf = this._filter('bandpass', 800, 3);
+        const ng = this.ctx.createGain();
+        ng.gain.setValueAtTime(0.03, t);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+
+        // İkinci osc: glitch darbe
+        const osc2 = this._osc(180, 'square', t + 0.05, t + 0.2);
+        osc2.frequency.exponentialRampToValueAtTime(40, t + 0.2);
+        const g2 = this.ctx.createGain();
+        g2.gain.setValueAtTime(0.03, t + 0.05);
+        g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+
+        osc1.connect(dist); dist.connect(g1); g1.connect(this.masterGain);
+        noise.connect(nf); nf.connect(ng); ng.connect(this.masterGain);
+        osc2.connect(g2); g2.connect(this.masterGain);
+        noise.start(t); noise.stop(t + 0.15);
     }
 
+    // --- CANCEL: Portal kapanması — ters sweep ---
     playCancel() {
-        this.play(330, 'sine', 0.1, 0.04, 'linear');
+        if (!kokpitData.soundEnabled) return;
+        this.init();
+        const t = this._t();
+
+        const osc = this._osc(800, 'sine', t, t + 0.18);
+        osc.frequency.exponentialRampToValueAtTime(300, t + 0.18);
+
+        const osc2 = this._osc(400, 'triangle', t, t + 0.12);
+        osc2.frequency.exponentialRampToValueAtTime(150, t + 0.12);
+
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.035, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+
+        const g2 = this.ctx.createGain();
+        g2.gain.setValueAtTime(0.02, t);
+        g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+
+        const filter = this._filter('lowpass', 1200, 1.5);
+
+        osc.connect(filter); osc2.connect(filter);
+        filter.connect(g); g.connect(this.masterGain);
+        osc2.connect(g2); g2.connect(this.masterGain);
     }
 
+    // --- HOLOGRAM: Modal açılış — maddeselleşme sesi ---
     playHologram() {
         if (!kokpitData.soundEnabled) return;
         this.init();
-        this.play(110, 'sine', 0.5, 0.1);
-        this.play(220, 'sine', 0.3, 0.05);
+        const t = this._t();
+
+        // Ana katman: yükselen rezonans
+        const osc1 = this._osc(80, 'sine', t, t + 0.55);
+        osc1.frequency.exponentialRampToValueAtTime(440, t + 0.4);
+        osc1.frequency.exponentialRampToValueAtTime(220, t + 0.55);
+
+        const g1 = this.ctx.createGain();
+        g1.gain.setValueAtTime(0, t);
+        g1.gain.linearRampToValueAtTime(0.06, t + 0.1);
+        g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+
+        // LFO: titreşim efekti
+        const lfo = this.ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(18, t);
+        const lfoGain = this.ctx.createGain();
+        lfoGain.gain.setValueAtTime(30, t);
+        lfoGain.gain.linearRampToValueAtTime(0, t + 0.55);
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc1.frequency);
+        lfo.start(t); lfo.stop(t + 0.55);
+
+        // Üst parlaklık katmanı
+        const osc2 = this._osc(1760, 'sine', t + 0.1, t + 0.45);
+        osc2.frequency.exponentialRampToValueAtTime(880, t + 0.45);
+        const g2 = this.ctx.createGain();
+        g2.gain.setValueAtTime(0, t + 0.1);
+        g2.gain.linearRampToValueAtTime(0.015, t + 0.2);
+        g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+
+        // Gürültü: holografik statik
+        const noise = this._noise(0.25);
+        const nf = this._filter('highpass', 4000, 2);
+        const ng = this.ctx.createGain();
+        ng.gain.setValueAtTime(0, t);
+        ng.gain.linearRampToValueAtTime(0.02, t + 0.05);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+
+        // Üçüncü katman: metal rezonans
+        const osc3 = this._osc(330, 'triangle', t + 0.05, t + 0.3);
+        const g3 = this.ctx.createGain();
+        g3.gain.setValueAtTime(0.025, t + 0.05);
+        g3.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+
+        const masterFilter = this._filter('lowpass', 6000, 1);
+
+        osc1.connect(g1); g1.connect(masterFilter);
+        osc2.connect(g2); g2.connect(masterFilter);
+        osc3.connect(g3); g3.connect(masterFilter);
+        masterFilter.connect(this.masterGain);
+
+        noise.connect(nf); nf.connect(ng); ng.connect(this.masterGain);
+        noise.start(t); noise.stop(t + 0.25);
     }
 }
 
