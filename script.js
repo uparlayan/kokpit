@@ -284,10 +284,12 @@ function loadData() {
         kokpitData.widgets = {
             crypto: { enabled: true, currency: "usd", coins: "bitcoin,ethereum,solana" },
             stocks: { enabled: true, symbols: "THYAO.IS,SCHD" },
+            tefas: { enabled: true, symbols: "YAE,TFU" },
             rss: { enabled: true, feeds: "https://feeds.bbci.co.uk/news/world/rss.xml", count: 10 }
         };
     }
     if (!kokpitData.widgets.stocks) kokpitData.widgets.stocks = { enabled: true, symbols: "THYAO.IS,SCHD" };
+    if (!kokpitData.widgets.tefas) kokpitData.widgets.tefas = { enabled: true, symbols: "YAE,TFU" };
     if (!kokpitData.background) kokpitData.background = "none";
 
     if (kokpitData.leftSidebarHidden) {
@@ -796,6 +798,89 @@ function renderStocksInWidget(stockData) {
 }
 
 // =============================================
+// v2.2: TEFAS (FON) WİDGET
+// =============================================
+let tefasCacheData = null;
+let tefasCacheTime = 0;
+const TEFAS_CACHE_TTL = 30 * 60 * 1000;
+
+async function fetchTefasPrices(forceRefresh = false) {
+    const cfg = kokpitData.widgets.tefas;
+    if (!cfg || !cfg.enabled) return;
+
+    const now = Date.now();
+    if (!forceRefresh && tefasCacheData && (now - tefasCacheTime < TEFAS_CACHE_TTL)) {
+        renderTefasWidget(tefasCacheData);
+        return;
+    }
+
+    const body = document.getElementById('tefas-body');
+    if (body) body.innerHTML = '<div class="widget-loading">⏳ Fon verileri çekiliyor...</div>';
+
+    const symbols = (cfg.symbols || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+    const results = [];
+
+    for (const symbol of symbols) {
+        try {
+            const url = `https://www.tefas.gov.tr/FonAnaliz.aspx?FonKod=${symbol}`;
+            const response = await new Promise((resolve) => {
+                chrome.runtime.sendMessage({ action: "fetchRSS", url }, resolve);
+            });
+
+            if (response && response.success && response.data) {
+                const text = response.data;
+                const priceMatch = text.match(/Son Fiyat \(TL\)\s*([\d,.]+)/i);
+                const changeMatch = text.match(/Günlük Getiri \(%\)\s*%?([-+\d,.]+)/i);
+
+                if (priceMatch) {
+                    results.push({
+                        symbol: symbol,
+                        price: parseFloat(priceMatch[1].replace(/\./g, '').replace(',', '.')),
+                        change: changeMatch ? parseFloat(changeMatch[1].replace(',', '.')) : 0
+                    });
+                }
+            }
+        } catch (e) { console.warn('TEFAS error:', symbol, e); }
+    }
+
+    if (results.length > 0) {
+        tefasCacheData = results;
+        tefasCacheTime = Date.now();
+        renderTefasWidget(tefasCacheData);
+    } else if (body) {
+        body.innerHTML = '<div class="widget-error">⚠️ Veri alınamadı</div>';
+    }
+}
+
+function renderTefasWidget(data) {
+    const body = document.getElementById('tefas-body');
+    if (!body) return;
+    body.innerHTML = '';
+
+    data.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'crypto-item borsa-item';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'crypto-name';
+        nameSpan.textContent = f.symbol;
+        item.appendChild(nameSpan);
+
+        const priceSpan = document.createElement('span');
+        priceSpan.className = 'crypto-price';
+        priceSpan.textContent = f.price.toLocaleString('tr-TR', { minimumFractionDigits: 6 }) + ' ₺';
+        item.appendChild(priceSpan);
+
+        const changeSpan = document.createElement('span');
+        changeSpan.className = 'crypto-change ' + (f.change >= 0 ? 'up' : 'down');
+        changeSpan.textContent = (f.change >= 0 ? '▲' : '▼') + ' %' + Math.abs(f.change).toFixed(4);
+        item.appendChild(changeSpan);
+
+        body.appendChild(item);
+    });
+}
+
+// =============================================
 // v2.0: RSS / HABER WİDGET
 // =============================================
 let rssCacheData = null;
@@ -924,6 +1009,7 @@ function initWidgets() {
     updateWidgetVisibility();
     if (kokpitData.widgets.crypto.enabled) fetchCryptoPrices();
     if (kokpitData.widgets.stocks && kokpitData.widgets.stocks.enabled) fetchStockPrices();
+    if (kokpitData.widgets.tefas && kokpitData.widgets.tefas.enabled) fetchTefasPrices();
     if (kokpitData.widgets.rss.enabled) fetchRSSFeeds();
 }
 
@@ -931,19 +1017,22 @@ function updateWidgetVisibility() {
     const strip = document.getElementById('widget-strip');
     const cryptoCard = document.getElementById('crypto-widget');
     const stockCard = document.getElementById('stock-widget');
+    const tefasCard = document.getElementById('tefas-widget');
     const rssCard = document.getElementById('rss-widget');
     if (!strip) return;
 
     const cfg = kokpitData.widgets;
     const cryptoOn = cfg.crypto && cfg.crypto.enabled;
     const stockOn = cfg.stocks && cfg.stocks.enabled;
+    const tefasOn = cfg.tefas && cfg.tefas.enabled;
     const rssOn = cfg.rss && cfg.rss.enabled;
 
     if (cryptoCard) cryptoCard.style.display = cryptoOn ? '' : 'none';
     if (stockCard) stockCard.style.display = stockOn ? '' : 'none';
+    if (tefasCard) tefasCard.style.display = tefasOn ? '' : 'none';
     if (rssCard) rssCard.style.display = rssOn ? '' : 'none';
     
-    strip.style.display = (cryptoOn || stockOn || rssOn) ? '' : 'none';
+    strip.style.display = (cryptoOn || stockOn || tefasOn || rssOn) ? '' : 'none';
 }
 
 // Widget Ayarları Modal
@@ -958,6 +1047,10 @@ function openWidgetSettingsModal() {
     if (cfg.stocks) {
         el('stockSymbols').value = cfg.stocks.symbols || '';
         el('stockEnabled').checked = cfg.stocks.enabled !== false;
+    }
+    if (cfg.tefas) {
+        el('tefasSymbols').value = cfg.tefas.symbols || '';
+        el('tefasEnabled').checked = cfg.tefas.enabled !== false;
     }
     el('rssEnabled').checked = cfg.rss.enabled;
     el('rssFeeds').value = cfg.rss.feeds || '';
@@ -981,6 +1074,9 @@ function saveWidgetSettings() {
     if (!kokpitData.widgets.stocks) kokpitData.widgets.stocks = {};
     kokpitData.widgets.stocks.enabled = el('stockEnabled').checked;
     kokpitData.widgets.stocks.symbols = el('stockSymbols').value.trim();
+    if (!kokpitData.widgets.tefas) kokpitData.widgets.tefas = {};
+    kokpitData.widgets.tefas.enabled = el('tefasEnabled').checked;
+    kokpitData.widgets.tefas.symbols = el('tefasSymbols').value.trim();
     kokpitData.widgets.rss.enabled = el('rssEnabled').checked;
     kokpitData.widgets.rss.feeds = el('rssFeeds').value.trim();
     kokpitData.widgets.rss.count = parseInt(el('rssCount').value);
@@ -988,7 +1084,7 @@ function saveWidgetSettings() {
     saveData();
 
     // Önbellekleri temizle ve yeniden çek
-    cryptoCacheData = null; stockCacheData = null; rssCacheData = null;
+    cryptoCacheData = null; stockCacheData = null; tefasCacheData = null; rssCacheData = null;
     closeWidgetSettingsModal();
     initWidgets();
 }
