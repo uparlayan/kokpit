@@ -12,6 +12,7 @@ const kokpitData = {
     soundEnabled: true,
     widgets: {
         crypto: { enabled: true, currency: "usd", coins: "bitcoin,ethereum,solana" },
+        stocks: { enabled: true, symbols: "THYAO.IS,SCHD" },
         rss: { enabled: true, feeds: "https://feeds.bbci.co.uk/news/world/rss.xml", count: 10 }
     },
     profiles: [
@@ -279,7 +280,14 @@ function loadData() {
 
     if (!kokpitData.authUsers) kokpitData.authUsers = [{ no: "0", label: "Varsayılan Hesap" }];
     if (kokpitData.globalActiveAuthNo === undefined) kokpitData.globalActiveAuthNo = "0";
-    if (!kokpitData.widgets) kokpitData.widgets = { crypto: { enabled: true, currency: "usd", coins: "bitcoin,ethereum,solana" }, rss: { enabled: true, feeds: "https://feeds.bbci.co.uk/news/world/rss.xml", count: 10 } };
+    if (!kokpitData.widgets) {
+        kokpitData.widgets = {
+            crypto: { enabled: true, currency: "usd", coins: "bitcoin,ethereum,solana" },
+            stocks: { enabled: true, symbols: "THYAO.IS,SCHD" },
+            rss: { enabled: true, feeds: "https://feeds.bbci.co.uk/news/world/rss.xml", count: 10 }
+        };
+    }
+    if (!kokpitData.widgets.stocks) kokpitData.widgets.stocks = { enabled: true, symbols: "THYAO.IS,SCHD" };
     if (!kokpitData.background) kokpitData.background = "none";
 
     if (kokpitData.leftSidebarHidden) {
@@ -588,6 +596,206 @@ function renderCryptoWidget({ data, currency }) {
 }
 
 // =============================================
+// v2.1: BORSA (YAHOO FINANCE) WİDGET
+// =============================================
+let stockCacheData = null;
+let stockCacheTime = 0;
+const STOCKS_CACHE_TTL = 10 * 60 * 1000; // 10 dakika
+
+async function fetchStockPrices(forceRefresh = false) {
+    const cfg = kokpitData.widgets.stocks;
+    if (!cfg || !cfg.enabled) return;
+
+    const now = Date.now();
+    if (!forceRefresh && stockCacheData && (now - stockCacheTime < STOCKS_CACHE_TTL)) {
+        renderStocksInWidget(stockCacheData);
+        return;
+    }
+
+    let body = document.getElementById('stock-body') || document.getElementById('crypto-body');
+    if (body) {
+        let loadingEl = body.querySelector('.widget-loading');
+        if (!loadingEl) body.innerHTML = '<div class="widget-loading">⏳ Borsa verileri çekiliyor...</div>';
+    }
+
+    const symbols = (cfg.symbols || '').split(',').map(s => s.trim()).filter(Boolean).map(s => {
+        // Otomatik .IS ekleme (Eğer 5 harfliyse ve nokta yoksa BIST kabul et)
+        if (s.length === 5 && !s.includes('.')) return s.toUpperCase() + '.IS';
+        return s.toUpperCase();
+    });
+    
+    if (symbols.length === 0) {
+        if (body) body.innerHTML = '<div class="widget-error">Hisse sembolü girilmedi.</div>';
+        return;
+    }
+
+    const results = [];
+    let lastError = null;
+
+    for (const symbol of symbols) {
+        let success = false;
+        
+        // 1. ADIM: Yahoo Finance (v7/quote) — Daha hafif ve stabil
+        try {
+            const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
+            const response = await new Promise((resolve) => {
+                chrome.runtime.sendMessage({ action: "fetchStock", url }, resolve);
+            });
+
+            if (response && response.success && response.data.quoteResponse && response.data.quoteResponse.result.length > 0) {
+                const quote = response.data.quoteResponse.result[0];
+                results.push({
+                    symbol: symbol.split('.')[0],
+                    price: quote.regularMarketPrice,
+                    prevClose: quote.regularMarketPreviousClose,
+                    currency: quote.currency
+                });
+                success = true;
+            }
+        } catch (e) { console.warn('Yahoo v7 error:', symbol, e); }
+
+        // 2. ADIM: Yahoo Finance (v8/chart) — Eğer v7 başarısızsa
+        if (!success) {
+            try {
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+                const response = await new Promise((resolve) => {
+                    chrome.runtime.sendMessage({ action: "fetchStock", url }, resolve);
+                });
+
+                if (response && response.success && response.data.chart.result) {
+                    const meta = response.data.chart.result[0].meta;
+                    results.push({
+                        symbol: symbol.split('.')[0], 
+                        price: meta.regularMarketPrice,
+                        prevClose: meta.previousClose || meta.chartPreviousClose || meta.regularMarketPrice,
+                        currency: meta.currency
+                    });
+                    success = true;
+                } else if (response && !response.success) {
+                    lastError = response.error;
+                }
+            } catch (e) { console.warn('Yahoo v8 error:', symbol, e); }
+        }
+
+        // 3. ADIM: Google Finance (Yedek - Scraping) — BIST için çok stabildir
+        if (!success) {
+            try {
+                let gSymbol = symbol;
+                if (gSymbol.endsWith('.IS')) gSymbol = gSymbol.replace('.IS', ':IST');
+                else if (!gSymbol.includes(':')) gSymbol = gSymbol.replace('.', ':');
+
+                const url = `https://www.google.com/finance/quote/${gSymbol}`;
+                const response = await new Promise((resolve) => {
+                    chrome.runtime.sendMessage({ action: "fetchRSS", url }, resolve);
+                });
+
+                if (response && response.success && response.data) {
+                    // JSON-LD veya meta tag'den fiyat çekme
+                    const priceMatch = response.data.match(/data-last-price="([^"]+)"/);
+                    const currencyMatch = response.data.match(/data-currency-code="([^"]+)"/);
+                    
+                    if (priceMatch && priceMatch[1]) {
+                        const price = parseFloat(priceMatch[1]);
+                        if (!isNaN(price)) {
+                            results.push({
+                                symbol: symbol.split('.')[0],
+                                price: price,
+                                prevClose: price, // Google Finance scraping'de dünkü kapanışı bulmak zor, o yüzden değişimi 0 gösteriyoruz
+                                currency: currencyMatch ? currencyMatch[1] : (symbol.endsWith('.IS') ? 'TRY' : 'USD')
+                            });
+                            success = true;
+                        }
+                    }
+                }
+            } catch (e) { console.warn('Google Finance error:', symbol, e); }
+        }
+
+        // 4. ADIM: Stooq.com (Son Çare)
+        if (!success) {
+            try {
+                let stooqSymbol = symbol.toLowerCase();
+                if (stooqSymbol.endsWith('.is')) stooqSymbol = stooqSymbol.replace('.is', '.tr');
+                else if (!stooqSymbol.includes('.')) stooqSymbol += '.us';
+
+                const url = `https://stooq.com/q/l/?s=${stooqSymbol}&f=sd2t2ohlcv&h&e=csv`;
+                const response = await new Promise((resolve) => {
+                    chrome.runtime.sendMessage({ action: "fetchRSS", url }, resolve);
+                });
+
+                if (response && response.success && response.data) {
+                    const lines = response.data.split('\n');
+                    if (lines.length > 1) {
+                        const vals = lines[1].split(',');
+                        if (vals.length >= 7) {
+                            const price = parseFloat(vals[6]);
+                            const open = parseFloat(vals[3]);
+                            if (!isNaN(price)) {
+                                results.push({
+                                    symbol: symbol.split('.')[0],
+                                    price: price,
+                                    prevClose: open,
+                                    currency: symbol.toUpperCase().endsWith('.IS') ? 'TRY' : 'USD'
+                                });
+                                success = true;
+                            }
+                        }
+                    }
+                }
+            } catch (e) { console.warn('Stooq error:', symbol, e); }
+        }
+    }
+
+    if (results.length > 0) {
+        stockCacheData = results;
+        stockCacheTime = Date.now();
+        renderStocksInWidget(stockCacheData);
+    } else {
+        if (body) body.innerHTML = `<div class="widget-error">⚠️ HATA: Veri alınamadı. (Borsalar kapalı veya Yahoo erişimi engellenmiş olabilir)</div>`;
+    }
+}
+
+function renderStocksInWidget(stockData) {
+    let body = document.getElementById('stock-body');
+    let isFallback = false;
+    if (!body) {
+        body = document.getElementById('crypto-body');
+        isFallback = true;
+    }
+    if (!body) return;
+
+    if (!isFallback) body.innerHTML = '';
+    
+    // Fallback durumunda (stale HTML) eski verileri temizle ama crypto varsa dokunma
+    if (isFallback) {
+        const oldBorsa = body.querySelectorAll('.borsa-item');
+        oldBorsa.forEach(el => el.remove());
+    }
+    
+    stockData.forEach(s => {
+        const change = ((s.price - s.prevClose) / s.prevClose) * 100;
+        const item = document.createElement('div');
+        item.className = 'crypto-item borsa-item';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'crypto-name';
+        nameSpan.textContent = s.symbol.toUpperCase();
+        item.appendChild(nameSpan);
+
+        const priceSpan = document.createElement('span');
+        priceSpan.className = 'crypto-price';
+        priceSpan.textContent = formatPrice(s.price, (s.currency || 'USD').toLowerCase());
+        item.appendChild(priceSpan);
+
+        const changeSpan = document.createElement('span');
+        changeSpan.className = 'crypto-change ' + (change >= 0 ? 'up' : 'down');
+        changeSpan.textContent = (change >= 0 ? '▲' : '▼') + ' ' + Math.abs(change).toFixed(2) + '%';
+        item.appendChild(changeSpan);
+
+        body.appendChild(item);
+    });
+}
+
+// =============================================
 // v2.0: RSS / HABER WİDGET
 // =============================================
 let rssCacheData = null;
@@ -715,22 +923,27 @@ function renderRSSWidget({ items, error }) {
 function initWidgets() {
     updateWidgetVisibility();
     if (kokpitData.widgets.crypto.enabled) fetchCryptoPrices();
+    if (kokpitData.widgets.stocks && kokpitData.widgets.stocks.enabled) fetchStockPrices();
     if (kokpitData.widgets.rss.enabled) fetchRSSFeeds();
 }
 
 function updateWidgetVisibility() {
     const strip = document.getElementById('widget-strip');
     const cryptoCard = document.getElementById('crypto-widget');
+    const stockCard = document.getElementById('stock-widget');
     const rssCard = document.getElementById('rss-widget');
     if (!strip) return;
 
     const cfg = kokpitData.widgets;
     const cryptoOn = cfg.crypto && cfg.crypto.enabled;
+    const stockOn = cfg.stocks && cfg.stocks.enabled;
     const rssOn = cfg.rss && cfg.rss.enabled;
 
     if (cryptoCard) cryptoCard.style.display = cryptoOn ? '' : 'none';
+    if (stockCard) stockCard.style.display = stockOn ? '' : 'none';
     if (rssCard) rssCard.style.display = rssOn ? '' : 'none';
-    strip.style.display = (cryptoOn || rssOn) ? '' : 'none';
+    
+    strip.style.display = (cryptoOn || stockOn || rssOn) ? '' : 'none';
 }
 
 // Widget Ayarları Modal
@@ -742,6 +955,10 @@ function openWidgetSettingsModal() {
     el('cryptoEnabled').checked = cfg.crypto.enabled;
     el('cryptoCurrency').value = cfg.crypto.currency || 'usd';
     el('cryptoCoins').value = cfg.crypto.coins || 'bitcoin,ethereum,solana';
+    if (cfg.stocks) {
+        el('stockSymbols').value = cfg.stocks.symbols || '';
+        el('stockEnabled').checked = cfg.stocks.enabled !== false;
+    }
     el('rssEnabled').checked = cfg.rss.enabled;
     el('rssFeeds').value = cfg.rss.feeds || '';
     el('rssCount').value = cfg.rss.count || 10;
@@ -761,6 +978,9 @@ function saveWidgetSettings() {
     kokpitData.widgets.crypto.enabled = el('cryptoEnabled').checked;
     kokpitData.widgets.crypto.currency = el('cryptoCurrency').value;
     kokpitData.widgets.crypto.coins = el('cryptoCoins').value.trim();
+    if (!kokpitData.widgets.stocks) kokpitData.widgets.stocks = {};
+    kokpitData.widgets.stocks.enabled = el('stockEnabled').checked;
+    kokpitData.widgets.stocks.symbols = el('stockSymbols').value.trim();
     kokpitData.widgets.rss.enabled = el('rssEnabled').checked;
     kokpitData.widgets.rss.feeds = el('rssFeeds').value.trim();
     kokpitData.widgets.rss.count = parseInt(el('rssCount').value);
@@ -768,7 +988,7 @@ function saveWidgetSettings() {
     saveData();
 
     // Önbellekleri temizle ve yeniden çek
-    cryptoCacheData = null; rssCacheData = null;
+    cryptoCacheData = null; stockCacheData = null; rssCacheData = null;
     closeWidgetSettingsModal();
     initWidgets();
 }
@@ -1840,6 +2060,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnCloseWidgetSettings")?.addEventListener("click", closeWidgetSettingsModal);
     document.getElementById("btnSaveWidgetSettings")?.addEventListener("click", saveWidgetSettings);
     document.getElementById("cryptoRefreshBtn")?.addEventListener("click", () => fetchCryptoPrices(true));
+    document.getElementById("stockRefreshBtn")?.addEventListener("click", () => fetchStockPrices(true));
     document.getElementById("rssRefreshBtn")?.addEventListener("click", () => fetchRSSFeeds(true));
 
     // Widget sekme geçişi

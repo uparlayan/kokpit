@@ -63,13 +63,24 @@
         <div class="widget-strip" id="widget-strip">
             <div class="widget-card crypto-widget-card" id="crypto-widget">
                 <div class="widget-header">
-                    <span>📈 Piyasa</span>
+                    <span>🪙 Kripto</span>
                     <button class="widget-refresh-btn" id="cryptoRefreshBtn" title="Yenile">↻</button>
                 </div>
                 <div class="widget-body" id="crypto-body">
                     <div class="widget-loading">⏳ Yükleniyor...</div>
                 </div>
             </div>
+            
+            <div class="widget-card crypto-widget-card" id="stock-widget">
+                <div class="widget-header">
+                    <span>📈 Borsa</span>
+                    <button class="widget-refresh-btn" id="stockRefreshBtn" title="Yenile">↻</button>
+                </div>
+                <div class="widget-body" id="stock-body">
+                    <div class="widget-loading">⏳ Yükleniyor...</div>
+                </div>
+            </div>
+
             <div class="widget-card rss-widget-card" id="rss-widget">
                 <div class="widget-header">
                     <span>📰 Haberler</span>
@@ -320,18 +331,18 @@
         <div class="modal-content">
             <h3>Widget Ayarları</h3>
             <div class="ws-tabs">
-                <button class="ws-tab active" data-tab="crypto">📈 Kripto/Borsa</button>
+                <button class="ws-tab active" data-tab="crypto">📈 Piyasa</button>
                 <button class="ws-tab" data-tab="rss">📰 RSS Haber</button>
             </div>
 
             <div class="ws-tab-content" id="ws-tab-crypto">
                 <div class="input-group">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="cryptoEnabled"> &nbsp;Kripto/Borsa widget'ını etkinleştir
+                        <input type="checkbox" id="cryptoEnabled"> &nbsp;Kripto verilerini etkinleştir
                     </label>
                 </div>
                 <div class="input-group">
-                    <label>Para Birimi</label>
+                    <label>Kripto Para Birimi</label>
                     <select id="cryptoCurrency">
                         <option value="usd">USD ($)</option>
                         <option value="try">TRY (₺)</option>
@@ -342,6 +353,19 @@
                 <div class="input-group">
                     <label>Coin'ler <small>(virgülle ayırın — CoinGecko ID)</small></label>
                     <input type="text" id="cryptoCoins" placeholder="bitcoin,ethereum,solana,binancecoin">
+                </div>
+                <hr style="border:0; border-top:1px solid var(--border-color); margin: 20px 0;">
+                <div class="input-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="stockEnabled"> &nbsp;Hisse/ETF verilerini etkinleştir
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>Hisse Sembolleri <small>(virgülle ayırın — Örn: THYAO.IS, SCHD, AAPL)</small></label>
+                    <input type="text" id="stockSymbols" placeholder="THYAO.IS,EREGL.IS,SCHD,AAPL">
+                    <small style="color:var(--text-dim); display:block; margin-top:4px;">
+                        💡 BIST için sonuna <b>.IS</b> ekleyin. ABD borsaları için doğrudan sembolü yazın.
+                    </small>
                 </div>
             </div>
 

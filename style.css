@@ -356,12 +356,13 @@ body::after {
 }
 
 .crypto-widget-card {
-    flex: 0 0 260px;
+    flex: 0 0 240px;
     max-height: 180px;
 }
 
 .rss-widget-card {
     flex: 1;
+    min-width: 300px;
     max-height: 180px;
 }
 
@@ -454,6 +455,17 @@ body::after {
 
 .crypto-change.up { color: #81c995; background: rgba(129, 201, 149, 0.1); }
 .crypto-change.down { color: #f28b82; background: rgba(242, 139, 130, 0.1); }
+
+.market-section-divider {
+    border-top: 1px solid var(--border-color);
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+.borsa-item {
+    border-left: 2px solid var(--accent);
+    padding-left: 8px !important;
+}
 
 /* RSS Widget Items */
 .rss-body {
