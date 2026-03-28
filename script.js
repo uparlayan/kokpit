@@ -615,39 +615,74 @@ async function fetchRSSFeeds(forceRefresh = false) {
 
     const count = parseInt(cfg.count) || 10;
     const allItems = [];
+    let lastError = null;
 
     for (const feedUrl of feedUrls.slice(0, 3)) { // max 3 feed
         try {
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`;
-            const resp = await fetch(proxyUrl);
-            const json = await resp.json();
-            const xml = new DOMParser().parseFromString(json.contents, 'text/xml');
-            const items = xml.querySelectorAll('item');
-            const source = xml.querySelector('channel > title')?.textContent || new URL(feedUrl).hostname;
+            // Arka plandan veriyi çekiyoruz (CORS bypass)
+            const response = await new Promise((resolve) => {
+                chrome.runtime.sendMessage({ action: "fetchRSS", url: feedUrl }, resolve);
+            });
+
+            if (!response) throw new Error("Arka plan cevapsız kaldı");
+            if (!response.success) {
+                lastError = response.error;
+                throw new Error(lastError);
+            }
+            
+            const text = response.data;
+            if (!text) throw new Error("Boş içerik");
+
+            const xml = new DOMParser().parseFromString(text, 'text/xml');
+            
+            const parserError = xml.querySelector('parsererror');
+            if (parserError) {
+                throw new Error("XML Ayrıştırma Hatası");
+            }
+
+            const items = xml.querySelectorAll('item, entry');
+            const source = (xml.querySelector('channel > title, feed > title')?.textContent || new URL(feedUrl).hostname).trim();
 
             items.forEach(item => {
-                const title = item.querySelector('title')?.textContent?.trim();
-                const link = item.querySelector('link')?.textContent?.trim() || 
-                             item.querySelector('guid')?.textContent?.trim();
-                if (title && link) allItems.push({ title, link, source });
+                let title = item.querySelector('title')?.textContent?.trim() || '';
+                let link = '';
+                
+                const linkEl = item.querySelector('link');
+                if (linkEl) {
+                    link = linkEl.textContent.trim() || linkEl.getAttribute('href') || '';
+                }
+                
+                if (!link) {
+                    link = item.querySelector('guid')?.textContent?.trim() || '';
+                }
+
+                if (title && link) {
+                    allItems.push({ title, link, source });
+                }
             });
         } catch(e) {
             console.warn('RSS fetch error:', feedUrl, e.message);
+            if (!lastError) lastError = e.message;
         }
     }
 
-    rssCacheData = { items: allItems.slice(0, count) };
-    rssCacheTime = Date.now();
-    renderRSSWidget(rssCacheData);
+    if (allItems.length > 0) {
+        rssCacheData = { items: allItems.slice(0, count) };
+        rssCacheTime = Date.now();
+        renderRSSWidget(rssCacheData);
+    } else {
+        renderRSSWidget({ items: [], error: lastError });
+    }
 }
 
-function renderRSSWidget({ items }) {
+function renderRSSWidget({ items, error }) {
     const body = document.getElementById('rss-body');
     if (!body) return;
     body.innerHTML = '';
 
     if (!items || items.length === 0) {
-        body.innerHTML = '<div class="widget-error">Haber bulunamadı veya feed erişilemiyor.</div>';
+        const msg = error ? `Hata: ${error}` : 'Haber bulunamadı veya feed erişilemiyor.';
+        body.innerHTML = `<div class="widget-error">${msg}</div>`;
         return;
     }
 
