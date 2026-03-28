@@ -8,6 +8,8 @@
 </head>
 
 <body>
+    <!-- Animasyonlu Arka Plan Canvas -->
+    <canvas id="bg-canvas"></canvas>
 
     <!-- SOL MENÜ (SIDEBAR) -->
     <div class="sidebar">
@@ -42,6 +44,7 @@
                 <button id="btnNewPersonalTab" class="toggle-btn" title="Kişisel Yeni Sekme">⚙️</button>
                 <button id="btnSound" class="toggle-btn" title="Sesleri Aç/Kapat">🔊</button>
                 <button id="btnTheme" class="toggle-btn" title="Tema Değiştir">🎨</button>
+                <button id="btnWidgets" class="toggle-btn" title="Widget Ayarları">📊</button>
                 <button id="toggleRightSidebar" class="toggle-btn" title="Sağ Menüyü Aç/Kapat">☰</button>
             </div>
         </div>
@@ -53,6 +56,28 @@
                 <form action="https://www.google.com/search" method="GET">
                     <input type="text" id="searchInput" name="q" placeholder="Google'da ara..." autofocus autocomplete="off">
                 </form>
+            </div>
+        </div>
+
+        <!-- Widget Şeridi -->
+        <div class="widget-strip" id="widget-strip">
+            <div class="widget-card crypto-widget-card" id="crypto-widget">
+                <div class="widget-header">
+                    <span>📈 Piyasa</span>
+                    <button class="widget-refresh-btn" id="cryptoRefreshBtn" title="Yenile">↻</button>
+                </div>
+                <div class="widget-body" id="crypto-body">
+                    <div class="widget-loading">⏳ Yükleniyor...</div>
+                </div>
+            </div>
+            <div class="widget-card rss-widget-card" id="rss-widget">
+                <div class="widget-header">
+                    <span>📰 Haberler</span>
+                    <button class="widget-refresh-btn" id="rssRefreshBtn" title="Yenile">↻</button>
+                </div>
+                <div class="widget-body rss-body" id="rss-body">
+                    <div class="widget-loading">⏳ Yükleniyor...</div>
+                </div>
             </div>
         </div>
 
@@ -85,8 +110,18 @@
             <div class="sidebar-header">
                 <h3 class="sidebar-title">Notlar</h3>
                 <div class="header-actions">
+                    <button id="btnExportNotes" class="action-btn" title="Notları Dışa Aktar">📤</button>
                     <button id="addNoteBtn" class="action-btn" title="Yeni Not Ekle">➕</button>
                 </div>
+            </div>
+            <!-- Arama & Sıralama -->
+            <div class="notes-controls">
+                <input type="text" id="noteSearch" class="note-search-input" placeholder="🔍 Not ara...">
+                <select id="noteSort" class="note-sort-select" title="Sırala">
+                    <option value="date">📅</option>
+                    <option value="pinned">📌</option>
+                    <option value="color">🎨</option>
+                </select>
             </div>
             <div id="notes-items" class="notes-items-container"></div>
         </div>
@@ -111,9 +146,14 @@
                 <label>URL</label>
                 <input type="url" id="itemUrl" placeholder="Örn: https://github.com">
             </div>
+            <div class="input-group" id="itemIconGroup">
+                <label>Özel İkon <small>Opsiyonel — emoji veya boş bırak</small></label>
+                <input type="text" id="itemIcon" placeholder="Örn: 🚀 🎯 💡" maxlength="4" class="emoji-input">
+            </div>
             <div class="modal-actions">
                 <button id="btnDelete" class="danger">Sil</button>
                 <div class="right-actions">
+                    <button id="btnCopyMove" class="cancel copy-move-btn" style="display:none;">📋 Kopyala/Taşı</button>
                     <button id="btnCancel" class="cancel">İptal</button>
                     <button id="btnSave" class="primary">Kaydet</button>
                 </div>
@@ -149,8 +189,7 @@
             <div class="input-group">
                 <label>Google Hesabı (AuthUser No) <small>Opsiyonel</small></label>
                 <input type="number" id="editProfileAuthNo" placeholder="Örn: 0, 1, 2" min="0">
-                <small>0: İlk giriş yaptığınız hesap, 1:
-                    İkinci hesap vb.</small>
+                <small>0: İlk giriş yaptığınız hesap, 1: İkinci hesap vb.</small>
             </div>
             <div class="input-group">
                 <label>Bağlı E-Posta / Etiket <small>Hatırlatıcı</small></label>
@@ -170,8 +209,7 @@
             <div class="input-group">
                 <label>Google Hesabı Numarası (AuthUser No)</label>
                 <input type="number" id="authObjNo" placeholder="Örn: 0, 1, 2" min="0">
-                <small>0 ilk giren hesaptır, 1 ikincisidir
-                    vb.</small>
+                <small>0 ilk giren hesaptır, 1 ikincisidir vb.</small>
             </div>
             <div class="input-group">
                 <label>Etiket / E-Posta (Hatırlatıcı)</label>
@@ -191,9 +229,12 @@
     <div id="noteModal" class="modal">
         <div class="modal-content wide">
             <h3 id="noteModalTitle">Not Ekle</h3>
+            <div class="markdown-hint">
+                <small>💡 Markdown: <code>**kalın**</code> <code>*italik*</code> <code>- liste</code> <code># başlık</code></small>
+            </div>
             <div class="input-group">
                 <label>Not İçeriği</label>
-                <textarea id="noteContent" rows="8" placeholder="Notunuzu buraya yazın..."></textarea>
+                <textarea id="noteContent" rows="8" placeholder="Notunuzu buraya yazın... (Markdown desteklenir)"></textarea>
             </div>
             <div class="input-group">
                 <label>Renk</label>
@@ -210,6 +251,7 @@
             <div class="modal-actions">
                 <button id="btnDeleteNote" class="danger">Sil</button>
                 <div class="right-actions">
+                    <button id="btnPinNote" class="cancel">📌 Sabitle</button>
                     <button id="btnCancelNote" class="cancel">İptal</button>
                     <button id="btnSaveNote" class="primary">Kaydet</button>
                 </div>
@@ -220,7 +262,7 @@
     <!-- TEMA SEÇİCİ MODAL -->
     <div id="themeModal" class="modal">
         <div class="modal-content">
-            <h3>Tema Seçin</h3>
+            <h3>Tema ve Arka Plan</h3>
             <div class="theme-grid">
                 <div class="theme-option active" data-theme="dark">
                     <div class="theme-preview preview-dark"></div>
@@ -243,8 +285,117 @@
                     <span>Orman</span>
                 </div>
             </div>
+
+            <!-- Canlı Arka Plan -->
+            <div class="bg-section">
+                <h4 class="bg-section-title">✨ Canlı Arka Plan</h4>
+                <div class="bg-grid">
+                    <div class="bg-option active" data-bg="none">
+                        <div class="bg-preview preview-bg-none">—</div>
+                        <span>Yok</span>
+                    </div>
+                    <div class="bg-option" data-bg="particles">
+                        <div class="bg-preview preview-bg-particles">✦</div>
+                        <span>Parçacık</span>
+                    </div>
+                    <div class="bg-option" data-bg="matrix">
+                        <div class="bg-preview preview-bg-matrix">0</div>
+                        <span>Matrix</span>
+                    </div>
+                    <div class="bg-option" data-bg="stars">
+                        <div class="bg-preview preview-bg-stars">★</div>
+                        <span>Yıldız</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="modal-actions flex-end">
                 <button id="btnCloseThemeModal" class="cancel">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WİDGET AYARLARI MODALI -->
+    <div id="widgetSettingsModal" class="modal">
+        <div class="modal-content">
+            <h3>Widget Ayarları</h3>
+            <div class="ws-tabs">
+                <button class="ws-tab active" data-tab="crypto">📈 Kripto/Borsa</button>
+                <button class="ws-tab" data-tab="rss">📰 RSS Haber</button>
+            </div>
+
+            <div class="ws-tab-content" id="ws-tab-crypto">
+                <div class="input-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="cryptoEnabled"> &nbsp;Kripto/Borsa widget'ını etkinleştir
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>Para Birimi</label>
+                    <select id="cryptoCurrency">
+                        <option value="usd">USD ($)</option>
+                        <option value="try">TRY (₺)</option>
+                        <option value="eur">EUR (€)</option>
+                        <option value="btc">BTC (₿)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Coin'ler <small>(virgülle ayırın — CoinGecko ID)</small></label>
+                    <input type="text" id="cryptoCoins" placeholder="bitcoin,ethereum,solana,binancecoin">
+                </div>
+            </div>
+
+            <div class="ws-tab-content" id="ws-tab-rss" style="display:none;">
+                <div class="input-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rssEnabled"> &nbsp;RSS Haber widget'ını etkinleştir
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>RSS Feed URL'leri <small>(her satıra bir tane)</small></label>
+                    <textarea id="rssFeeds" rows="4" placeholder="https://feeds.bbci.co.uk/news/rss.xml&#10;https://www.theverge.com/rss/index.xml"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Gösterilecek haber sayısı</label>
+                    <select id="rssCount">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-actions flex-end">
+                <button id="btnCloseWidgetSettings" class="cancel">İptal</button>
+                <button id="btnSaveWidgetSettings" class="primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KOPYALA/TAŞI MODALI -->
+    <div id="copyMoveModal" class="modal">
+        <div class="modal-content">
+            <h3 id="copyMoveTitle">Kısayolu Kopyala / Taşı</h3>
+            <p style="color:var(--text-dim); font-size:13px; margin-bottom:12px;">Hedef profili seçin:</p>
+            <div id="copyMoveProfileList" class="profile-list"></div>
+            <div class="modal-actions flex-end">
+                <button id="btnCloseCopyMove" class="cancel">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOT DIŞA AKTARMA MODALI -->
+    <div id="exportNotesModal" class="modal">
+        <div class="modal-content">
+            <h3>Notları Dışa Aktar</h3>
+            <p style="color:var(--text-dim); margin-bottom:16px; font-size:14px;">Hangi formatta dışa aktarmak istiyorsunuz?</p>
+            <div class="modal-actions">
+                <button id="btnCloseExportNotes" class="cancel">İptal</button>
+                <div class="right-actions">
+                    <button id="btnExportTxt" class="cancel">📄 .TXT</button>
+                    <button id="btnExportMd" class="primary">📝 .MD</button>
+                </div>
             </div>
         </div>
     </div>
