@@ -1644,3 +1644,48 @@ body.resizing-h { cursor: row-resize; user-select: none; }
     border-color: #8ab4f8;
 }
 
+/* =============================================
+   TATLI GÖZLER (MASCOT)
+   ============================================= */
+.main-content {
+    position: relative;
+}
+
+.cute-eyes-container {
+    position: absolute;
+    bottom: 25px;
+    right: 35px;
+    display: flex;
+    gap: 12px;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.main-content:hover .cute-eyes-container {
+    opacity: 1;
+}
+
+.cute-eye {
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 2px 6px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cute-pupil {
+    width: 14px;
+    height: 14px;
+    background: #1a1a1a;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: inset -3px -3px 0 rgba(255,255,255,0.8), inset 1px 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.05s linear;
+}
+

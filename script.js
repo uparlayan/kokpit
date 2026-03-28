@@ -936,6 +936,7 @@ async function fetchRSSFeeds(forceRefresh = false) {
 
             const items = xml.querySelectorAll('item, entry');
             const source = (xml.querySelector('channel > title, feed > title')?.textContent || new URL(feedUrl).hostname).trim();
+            const sourceItems = [];
 
             items.forEach(item => {
                 let title = item.querySelector('title')?.textContent?.trim() || '';
@@ -950,18 +951,33 @@ async function fetchRSSFeeds(forceRefresh = false) {
                     link = item.querySelector('guid')?.textContent?.trim() || '';
                 }
 
+                // Parse date for sorting
+                let dateStr = item.querySelector('pubDate, updated, published, date')?.textContent;
+                let dateNum = dateStr ? new Date(dateStr).getTime() : 0;
+                if (isNaN(dateNum)) dateNum = 0;
+
                 if (title && link) {
-                    allItems.push({ title, link, source });
+                    sourceItems.push({ title, link, source, date: dateNum });
                 }
             });
+
+            // Sort this feed's items by date descending (newest first)
+            sourceItems.sort((a, b) => b.date - a.date);
+            // Take the newest `count` items from THIS feed
+            allItems.push(...sourceItems.slice(0, count));
         } catch (e) {
             console.warn('RSS fetch error:', feedUrl, e.message);
             if (!lastError) lastError = e.message;
         }
     }
 
+    // Sort the combined list (items from all feeds) by date descending as well,
+    // so the globally newest news are interleaved and appear at the top.
+    allItems.sort((a, b) => b.date - a.date);
+
     if (allItems.length > 0) {
-        rssCacheData = { items: allItems.slice(0, count) };
+        // No slicing here; we show all collected items (which is up to feeds.length * count)
+        rssCacheData = { items: allItems };
         rssCacheTime = Date.now();
         renderRSSWidget(rssCacheData);
     } else {
@@ -2509,7 +2525,41 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("lensSearchButton")?.addEventListener("click", handleLensSearch);
     document.getElementById("closeVoiceBtn")?.addEventListener("click", stopVoiceSearch);
     document.getElementById("closeLensBtn")?.addEventListener("click", stopLensSearch);
+
+    // Tatlı Gözler (Mascot) Başlatma
+    initCuteEyes();
 });
+
+function initCuteEyes() {
+    const eyes = document.querySelectorAll('.cute-eye');
+    if (!eyes.length) return;
+
+    document.addEventListener('mousemove', (e) => {
+        eyes.forEach(eye => {
+            const pupil = eye.querySelector('.cute-pupil');
+            if (!pupil) return;
+
+            const rect = eye.getBoundingClientRect();
+            const eyeCenterX = rect.left + rect.width / 2;
+            const eyeCenterY = rect.top + rect.height / 2;
+
+            const rad = Math.atan2(e.clientY - eyeCenterY, e.clientX - eyeCenterX);
+            
+            // Gözbebeğinin gidebileceği maksimum mesafe
+            const maxRadius = (rect.width / 2) - (pupil.offsetWidth / 2) - 2;
+
+            const dist = Math.hypot(e.clientX - eyeCenterX, e.clientY - eyeCenterY);
+            // Fare uzaklaştıkça gözler köşeye daha çok yanaşır
+            const power = Math.min(dist / 400, 1);
+            const moveRadius = maxRadius * power;
+
+            const pupilX = Math.cos(rad) * moveRadius;
+            const pupilY = Math.sin(rad) * moveRadius;
+
+            pupil.style.transform = `translate(${pupilX}px, ${pupilY}px)`;
+        });
+    });
+}
 
 // Modal dışına tıklama ile kapat
 window.addEventListener("click", (event) => {
