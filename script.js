@@ -291,6 +291,7 @@ function loadData() {
     if (!kokpitData.widgets.stocks) kokpitData.widgets.stocks = { enabled: true, symbols: "THYAO.IS,SCHD" };
     if (!kokpitData.widgets.tefas) kokpitData.widgets.tefas = { enabled: true, symbols: "YAE,TFU" };
     if (!kokpitData.background) kokpitData.background = "none";
+    if (kokpitData.searchMode === undefined) kokpitData.searchMode = "google";
 
     if (kokpitData.leftSidebarHidden) {
         document.querySelector(".sidebar")?.classList.add("hidden");
@@ -1979,10 +1980,292 @@ function importData(event) {
 }
 
 // =============================================
+// ARAMA VE AI MODU YÖNETİMİ (GOOGLE EKOSİSTEMİ)
+// =============================================
+function toggleSearchMode() {
+    kokpitData.searchMode = (kokpitData.searchMode === "google") ? "ai" : "google";
+    updateSearchUI();
+    saveData();
+    sounds.playClick();
+}
+
+function updateSearchUI() {
+    const searchBox = document.getElementById("searchBoxContainer");
+    const searchInput = document.getElementById("searchInput");
+    const aiButtonText = document.getElementById("aiButtonText");
+
+    if (!searchBox || !searchInput) return;
+
+    if (kokpitData.searchMode === "ai") {
+        searchBox.classList.add("ai-mode");
+        searchInput.placeholder = "Google Arama'da AI Modu'na sorun";
+        if (aiButtonText) aiButtonText.textContent = "Google Arama";
+    } else {
+        searchBox.classList.remove("ai-mode");
+        searchInput.placeholder = "Google'da arayın veya URL'yi yazın";
+        if (aiButtonText) aiButtonText.textContent = "AI Modu";
+    }
+}
+
+function handleSearch(e) {
+    if (e) e.preventDefault();
+    const query = document.getElementById("searchInput").value.trim();
+    if (!query) return;
+
+    // URL Kontrolü (Basit)
+    if (query.match(/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/)) {
+        let url = query;
+        if (!url.startsWith('http')) url = 'https://' + url;
+        window.location.href = url;
+        return;
+    }
+
+    // Gelişmiş Chrome NTP Deneyimi: AI Modu seçiliyken doğrudan Google Gemini'ye,
+    // normal modda standart Google Arama'ya yönlendirme yapılır.
+    let url = "";
+    if (kokpitData.searchMode === "ai") {
+        // AI Araması için Google Gemini (Workspace) tetikleyicisi
+        url = `https://gemini.google.com/app?q=${encodeURIComponent(query)}`;
+    } else {
+        url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+    }
+    window.location.href = url;
+}
+
+let voiceRecognition = null;
+let isVoiceRecognizing = false;
+
+function initVoiceRecognition() {
+    if (voiceRecognition) return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Tarayıcınız sesle aramayı desteklemiyor.");
+        return;
+    }
+    voiceRecognition = new SpeechRecognition();
+    voiceRecognition.lang = 'tr-TR';
+    voiceRecognition.interimResults = true;
+    voiceRecognition.continuous = false;
+
+    voiceRecognition.onstart = () => {
+        isVoiceRecognizing = true;
+        document.getElementById('voiceStatusText').textContent = "Dinleniyor...";
+        document.getElementById('voiceStatusText').classList.remove('active');
+        document.querySelector('.mic-pulse').style.animationPlayState = 'running';
+        document.querySelector('.mic-icon-wrapper').classList.add('recording');
+    };
+
+    voiceRecognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+
+        const textElement = document.getElementById('voiceStatusText');
+        if (interimTranscript) {
+            textElement.textContent = interimTranscript;
+            textElement.classList.add('active');
+        }
+        
+        if (finalTranscript) {
+            textElement.textContent = finalTranscript;
+            textElement.classList.add('active');
+            
+            // Konuşma algılandığında Google'da aramayı tetikle
+            setTimeout(() => {
+                stopVoiceSearch();
+                const url = `https://www.google.com/search?q=${encodeURIComponent(finalTranscript)}`;
+                window.location.href = url;
+            }, 800);
+        }
+    };
+
+    voiceRecognition.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+        if (event.error === 'not-allowed') {
+            document.getElementById('voiceStatusText').textContent = "Mikrofon izni verilmedi.";
+        } else {
+            document.getElementById('voiceStatusText').textContent = "Anlaşılamadı...";
+        }
+        document.querySelector('.mic-pulse').style.animationPlayState = 'paused';
+        document.querySelector('.mic-icon-wrapper').classList.remove('recording');
+    };
+
+    voiceRecognition.onend = () => {
+        isVoiceRecognizing = false;
+        document.querySelector('.mic-pulse').style.animationPlayState = 'paused';
+        document.querySelector('.mic-icon-wrapper').classList.remove('recording');
+    };
+}
+
+function handleVoiceSearch() {
+    sounds.playClick();
+    const overlay = document.getElementById('voice-overlay');
+    if (!overlay) return;
+    
+    initVoiceRecognition();
+    if (voiceRecognition) {
+        try {
+            voiceRecognition.start();
+            overlay.classList.remove('hidden');
+        } catch (e) {
+            console.error("Zaten dinleniyor.");
+        }
+    }
+}
+
+function stopVoiceSearch() {
+    const overlay = document.getElementById('voice-overlay');
+    if (overlay) overlay.classList.add('hidden');
+    if (voiceRecognition && isVoiceRecognizing) {
+        voiceRecognition.stop();
+    }
+}
+
+function handleLensSearch() {
+    sounds.playClick();
+    const overlay = document.getElementById('lens-overlay');
+    if (overlay) overlay.classList.remove('hidden');
+}
+
+function stopLensSearch() {
+    const overlay = document.getElementById('lens-overlay');
+    if (overlay) overlay.classList.add('hidden');
+}
+
+// =============================================
 // DOMContentLoaded
 // =============================================
 document.addEventListener("DOMContentLoaded", () => {
     loadData();
+
+    // Lens Arayüzü Bağlantıları
+    const lensDropZone = document.getElementById('lensDropZone');
+    const lensFileInput = document.getElementById('lensFileInput');
+    const lensUploadText = document.getElementById('lensUploadText');
+    const lensUrlInput = document.getElementById('lensUrlInput');
+    const lensUrlSubmitBtn = document.getElementById('lensUrlSubmitBtn');
+    const lensUploadForm = document.getElementById('lensUploadForm');
+    const encodedImageInput = document.getElementById('encoded_image_input');
+
+    if (lensDropZone && lensFileInput) {
+        let pendingLensFile = null;
+        let defaultDropMessage = "";
+        const dropZoneMessage = lensDropZone.querySelector('p');
+        const dropZoneIcon = lensDropZone.querySelector('.lens-icon-large');
+        
+        if (dropZoneMessage) defaultDropMessage = dropZoneMessage.innerHTML;
+
+        function bindUploadText() {
+            const uploadText = document.getElementById('lensUploadText');
+            if (uploadText) {
+                uploadText.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    lensFileInput.click();
+                });
+            }
+        }
+        bindUploadText();
+
+        lensDropZone.addEventListener('click', () => {
+            if (!pendingLensFile) lensFileInput.click();
+        });
+
+        lensDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            lensDropZone.classList.add('dragover');
+        });
+
+        lensDropZone.addEventListener('dragleave', () => lensDropZone.classList.remove('dragover'));
+
+        lensDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            lensDropZone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleLensFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        lensFileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleLensFile(e.target.files[0]);
+            }
+        });
+
+        function handleLensFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert("Lütfen geçerli bir görsel yükleyin.");
+                return;
+            }
+            pendingLensFile = file;
+            
+            if (dropZoneIcon) dropZoneIcon.textContent = "✅";
+            if (dropZoneMessage) {
+                dropZoneMessage.innerHTML = `<span style="color:#8ab4f8; font-weight:bold;">${file.name}</span> seçildi.<br><br>Görselde aramak için <strong>"Ara"</strong> butonuna basın.`;
+            }
+            lensDropZone.style.borderColor = "#8ab4f8";
+            lensDropZone.style.background = "rgba(138, 180, 248, 0.1)";
+            
+            lensUrlInput.value = ""; // URL ile çakışmaması için temizle
+        }
+
+        lensUrlSubmitBtn.addEventListener('click', submitLensSearch);
+        lensUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitLensSearch();
+        });
+
+        function submitLensSearch() {
+            // Önce bekleyen bir dosya varsa onu gönder 
+            if (pendingLensFile) {
+                // Her ihtimale karşı UI'ı bekleme moduna al ki donduğuna dair yanlış anlama olmasın
+                if (dropZoneMessage) {
+                    dropZoneMessage.innerHTML = `<span style="color:#8ab4f8; font-weight:bold;">Analiz ediliyor...</span> Google Lens'e yönlendiriliyorsunuz.`;
+                }
+
+                const dt = new DataTransfer();
+                dt.items.add(pendingLensFile);
+                encodedImageInput.files = dt.files;
+                
+                // Form action'ı garantili güncel lens endpointi (yeni sekme engelini aşmak için _self (kaldırılmış target))
+                lensUploadForm.action = "https://lens.google.com/v3/upload";
+                lensUploadForm.removeAttribute('target'); 
+                lensUploadForm.submit();
+                
+                // NOT: resetLensUI() ÇAĞRILMAYACAK! Çağrılırsa işlem yarıda kesiliyor ve kapanıyordu.
+                return;
+            }
+
+            // Dosya yoksa URL üzerinden arama yap
+            const url = lensUrlInput.value.trim();
+            if (!url) {
+                alert("Lütfen önce bir resim seçin veya görsel bağlantısı yapıştırın.");
+                return;
+            }
+            
+            const lensUrlStr = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(url)}`;
+            window.location.href = lensUrlStr;
+            
+            // Eğer URL gidiyorsa sıfırlama yapılabilir çünkü href atanması kesintiye uğratmaz
+            setTimeout(resetLensUI, 100);
+        }
+
+        function resetLensUI() {
+            pendingLensFile = null;
+            lensFileInput.value = "";
+            if (dropZoneIcon) dropZoneIcon.textContent = "🖼️";
+            if (dropZoneMessage) dropZoneMessage.innerHTML = defaultDropMessage;
+            lensDropZone.style = "";
+            bindUploadText();
+            stopLensSearch();
+        }
+    }
+
 
     const leftSidebar = document.querySelector(".sidebar");
     const rightSidebar = document.querySelector(".right-sidebar");
@@ -2207,6 +2490,15 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSidebar();
     renderGrid();
     renderNoteList();
+
+    // Arama Kutusu ve AI Modu Başlatma
+    updateSearchUI();
+    document.getElementById("aiModeButton")?.addEventListener("click", toggleSearchMode);
+    document.getElementById("searchForm")?.addEventListener("submit", handleSearch);
+    document.getElementById("voiceSearchButton")?.addEventListener("click", handleVoiceSearch);
+    document.getElementById("lensSearchButton")?.addEventListener("click", handleLensSearch);
+    document.getElementById("closeVoiceBtn")?.addEventListener("click", stopVoiceSearch);
+    document.getElementById("closeLensBtn")?.addEventListener("click", stopLensSearch);
 });
 
 // Modal dışına tıklama ile kapat
@@ -2220,7 +2512,10 @@ window.addEventListener("click", (event) => {
         ["widgetSettingsModal", closeWidgetSettingsModal],
         ["copyMoveModal", closeCopyMoveModal],
         ["exportNotesModal", closeExportNotesModal],
+        ["voice-overlay", stopVoiceSearch],
+        ["lens-overlay", stopLensSearch]
     ];
+
     modals.forEach(([id, fn]) => {
         const modal = document.getElementById(id);
         if (event.target === modal) fn();

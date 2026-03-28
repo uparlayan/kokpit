@@ -51,13 +51,31 @@
 
         <!-- Arama Çubuğu -->
         <div class="search-container">
-            <div class="cyber-search-box">
-                <span class="search-icon">🔍</span>
-                <form action="https://www.google.com/search" method="GET">
-                    <input type="text" id="searchInput" name="q" placeholder="Google'da ara..." autofocus autocomplete="off">
-                </form>
+            <div class="cyber-search-box" id="searchBoxContainer">
+                <div id="inputInnerContainer">
+                    <span class="search-icon" id="searchIcon">🔍</span>
+                    <form action="https://www.google.com/search" method="GET" id="searchForm">
+                        <input type="text" id="searchInput" name="q" placeholder="Google'da arayın veya URL'yi yazın" autofocus autocomplete="off" spellcheck="false">
+                    </form>
+                    
+                    <div class="searchbox-icon-button-container voice">
+                        <button id="voiceSearchButton" class="searchbox-icon-button" title="Sesle arama">🎤</button>
+                    </div>
+                    
+                    <div class="searchbox-icon-button-container lens">
+                        <button id="lensSearchButton" class="searchbox-icon-button lens" title="Görselle Arama">📷</button>
+                    </div>
+
+                    <div id="glowAnimationWrapper" class="glow-container">
+                        <button id="aiModeButton" class="compose-container" title="Google Arama'da AI Modu'na sorun">
+                            <span class="spark-icon">✨</span>
+                            <span id="aiButtonText">AI Modu</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+
 
         <!-- Widget Şeridi -->
         <div class="widget-strip" id="widget-strip">
@@ -444,7 +462,47 @@
         </div>
     </div>
 
+    <!-- SESLE ARAMA ARAYÜZÜ (OVERLAY) -->
+    <div id="voice-overlay" class="hidden">
+        <button id="closeVoiceBtn" class="close-overlay-btn" title="Kapat">✖</button>
+        <div class="voice-content">
+            <h2 id="voiceStatusText">Dinleniyor...</h2>
+            <div class="mic-container">
+                <div class="mic-pulse"></div>
+                <div class="mic-icon-wrapper">
+                    <span class="mic-icon">🎤</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LENS (GÖRSELLE ARAMA) ARAYÜZÜ (OVERLAY) -->
+    <div id="lens-overlay" class="hidden">
+        <button id="closeLensBtn" class="close-overlay-btn" title="Kapat">✖</button>
+        <div class="lens-content">
+            <h2 class="lens-title">Görselle arama yapın</h2>
+            <div class="lens-drop-zone" id="lensDropZone">
+                <div class="lens-icon-large">🖼️</div>
+                <p>Bir görseli buraya sürükleyin veya <span class="lens-upload-text" id="lensUploadText">dosya yükleyin</span></p>
+                <input type="file" id="lensFileInput" accept="image/*" class="hidden" style="display:none;">
+            </div>
+            <div class="lens-divider"><span>VEYA</span></div>
+            <div class="lens-url-box">
+                <input type="text" id="lensUrlInput" placeholder="Görsel bağlantısını yapıştırın">
+                <button id="lensUrlSubmitBtn">Ara</button>
+            </div>
+            <!-- Dosya yükleme formu: Google Görseller Reverse Upload -->
+            <form id="lensUploadForm" method="POST" action="https://www.google.com/searchbyimage/upload" enctype="multipart/form-data" class="hidden" target="_blank" style="display:none;">
+                <input type="file" name="encoded_image" id="encoded_image_input">
+            </form>
+        </div>
+    </div>
+
+
+
     <script src="script.js"></script>
+
+
 </body>
 
 </html>
