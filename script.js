@@ -770,14 +770,14 @@ function renderStocksInWidget(stockData) {
     
     // Fallback durumunda (stale HTML) eski verileri temizle ama crypto varsa dokunma
     if (isFallback) {
-        const oldBorsa = body.querySelectorAll('.borsa-item');
-        oldBorsa.forEach(el => el.remove());
+        // Önceden borsa-item ile ayırt ediliyordu, artık ikisi de crypto-item
+        // O yüzden sadece temizleme yapıyoruz.
     }
     
     stockData.forEach(s => {
         const change = ((s.price - s.prevClose) / s.prevClose) * 100;
         const item = document.createElement('div');
-        item.className = 'crypto-item borsa-item';
+        item.className = 'crypto-item';
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'crypto-name';
@@ -860,7 +860,7 @@ function renderTefasWidget(data) {
 
     data.forEach(f => {
         const item = document.createElement('div');
-        item.className = 'crypto-item borsa-item';
+        item.className = 'crypto-item';
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'crypto-name';
