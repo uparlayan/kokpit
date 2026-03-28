@@ -450,13 +450,13 @@ body::after {
 
 .crypto-widget-card {
     flex: 0 0 240px;
-    max-height: 180px;
+    max-height: var(--widget-height, 180px);
 }
 
 .rss-widget-card {
     flex: 1;
     min-width: 300px;
-    max-height: 180px;
+    max-height: var(--widget-height, 180px);
 }
 
 .widget-header {
@@ -489,7 +489,7 @@ body::after {
 .widget-body {
     padding: 8px;
     overflow-y: auto;
-    max-height: 140px;
+    max-height: calc(var(--widget-height, 180px) - 40px);
     scrollbar-width: thin;
 }
 

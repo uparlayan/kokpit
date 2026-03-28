@@ -1034,6 +1034,10 @@ function updateWidgetVisibility() {
     if (rssCard) rssCard.style.display = rssOn ? '' : 'none';
 
     strip.style.display = (cryptoOn || stockOn || tefasOn || rssOn) ? '' : 'none';
+    
+    // Yükseklik ayarını CSS değişkeni olarak uygula
+    const customHeight = parseInt(cfg.height) || 180;
+    document.documentElement.style.setProperty('--widget-height', `${customHeight}px`);
 }
 
 // Widget Ayarları Modal
@@ -1042,6 +1046,7 @@ function openWidgetSettingsModal() {
     const cfg = kokpitData.widgets;
     const el = (id) => document.getElementById(id);
 
+    el('widgetHeight').value = cfg.height || 180;
     el('cryptoEnabled').checked = cfg.crypto.enabled;
     el('cryptoCurrency').value = cfg.crypto.currency || 'usd';
     el('cryptoCoins').value = cfg.crypto.coins || 'bitcoin,ethereum,solana';
@@ -1069,6 +1074,11 @@ function closeWidgetSettingsModal() {
 
 function saveWidgetSettings() {
     const el = (id) => document.getElementById(id);
+    
+    let wHeight = parseInt(el('widgetHeight').value, 10);
+    if (isNaN(wHeight) || wHeight < 100) wHeight = 180;
+    kokpitData.widgets.height = wHeight;
+
     kokpitData.widgets.crypto.enabled = el('cryptoEnabled').checked;
     kokpitData.widgets.crypto.currency = el('cryptoCurrency').value;
     kokpitData.widgets.crypto.coins = el('cryptoCoins').value.trim();
