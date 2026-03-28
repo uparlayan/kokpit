@@ -42,11 +42,11 @@ function loadFaviconCache() {
     try {
         const raw = localStorage.getItem('kokpit_favicon_cache');
         if (raw) faviconCache = JSON.parse(raw);
-    } catch(e) { faviconCache = {}; }
+    } catch (e) { faviconCache = {}; }
 }
 
 function saveFaviconCache() {
-    try { localStorage.setItem('kokpit_favicon_cache', JSON.stringify(faviconCache)); } catch(e) {}
+    try { localStorage.setItem('kokpit_favicon_cache', JSON.stringify(faviconCache)); } catch (e) { }
 }
 
 function getCachedFavicon(hostname) {
@@ -97,11 +97,11 @@ class SoundManager {
         osc.stop(this.ctx.currentTime + duration);
     }
 
-    playBeep()    { this.play(2000 + Math.random() * 500, 'sine', 0.02, 0.01, 'linear'); }
-    playClick()   { this.play(440, 'square', 0.05, 0.02); }
-    playSave()    { this.play(660, 'sine', 0.1, 0.05); setTimeout(() => this.play(880, 'sine', 0.15, 0.03), 50); }
-    playDelete()  { this.play(220, 'square', 0.2, 0.05); this.play(110, 'square', 0.3, 0.03); }
-    playCancel()  { this.play(330, 'sine', 0.1, 0.04, 'linear'); }
+    playBeep() { this.play(2000 + Math.random() * 500, 'sine', 0.02, 0.01, 'linear'); }
+    playClick() { this.play(440, 'square', 0.05, 0.02); }
+    playSave() { this.play(660, 'sine', 0.1, 0.05); setTimeout(() => this.play(880, 'sine', 0.15, 0.03), 50); }
+    playDelete() { this.play(220, 'square', 0.2, 0.05); this.play(110, 'square', 0.3, 0.03); }
+    playCancel() { this.play(330, 'sine', 0.1, 0.04, 'linear'); }
     playHologram() {
         if (!kokpitData.soundEnabled) return;
         this.init();
@@ -137,7 +137,7 @@ function modifyUrlWithAuthUser(url) {
     try {
         const urlObj = new URL(url);
         const host = urlObj.hostname;
-        const googleDomains = ["mail.google.com","drive.google.com","docs.google.com","calendar.google.com","meet.google.com","contacts.google.com","keep.google.com","youtube.com"];
+        const googleDomains = ["mail.google.com", "drive.google.com", "docs.google.com", "calendar.google.com", "meet.google.com", "contacts.google.com", "keep.google.com", "youtube.com"];
         const isGoogle = googleDomains.some(d => host === d || host.endsWith("." + d));
         if (isGoogle) {
             if (urlObj.pathname.match(/\/u\/\d+\//)) {
@@ -147,7 +147,7 @@ function modifyUrlWithAuthUser(url) {
             }
             return urlObj.toString();
         }
-    } catch(e) {}
+    } catch (e) { }
     return url;
 }
 
@@ -171,7 +171,7 @@ const getFavicon = (url) => {
         const cached = getCachedFavicon(hostname);
         if (cached) return cached;
         return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
-    } catch(e) {
+    } catch (e) {
         return DEFAULT_FAVICON_SVG;
     }
 };
@@ -190,7 +190,7 @@ function setupFaviconImg(img, url, size = 20) {
             try {
                 const urlObj = new URL(url);
                 img.src = `https://icons.duckduckgo.com/ip3/${urlObj.hostname}.ico`;
-            } catch(e) {
+            } catch (e) {
                 img.src = DEFAULT_FAVICON_SVG;
                 img.onerror = null;
             }
@@ -205,7 +205,7 @@ function setupFaviconImg(img, url, size = 20) {
             try {
                 const urlObj = new URL(url);
                 cacheFavicon(urlObj.hostname, img.src);
-            } catch(e) {}
+            } catch (e) { }
         }
     };
 }
@@ -498,7 +498,7 @@ function startStars() {
             const sy = (s.y - cy) * (bgCanvas.width / s.z) + cy;
             const spx = (s.x - cx) * (bgCanvas.width / s.pz) + cx;
             const spy = (s.y - cy) * (bgCanvas.width / s.pz) + cy;
-            const size = (1 - s.z / bgCanvas.width) * 2.5;
+            const size = (1 - s.z / bgCanvas.width) * 6; // Yıldızları daha belirgin yapmak için büyütüldü
             const alpha = 1 - s.z / bgCanvas.width;
             bgCtx.beginPath();
             bgCtx.strokeStyle = `rgba(255,255,255,${alpha})`;
@@ -516,7 +516,7 @@ function startStars() {
 // =============================================
 let cryptoCacheData = null;
 let cryptoCacheTime = 0;
-const CRYPTO_CACHE_TTL = 5 * 60 * 1000; // 5 dakika
+const CRYPTO_CACHE_TTL = 10 * 60 * 1000; // 5 dakika
 
 async function fetchCryptoPrices(forceRefresh = false) {
     const cfg = kokpitData.widgets.crypto;
@@ -542,7 +542,7 @@ async function fetchCryptoPrices(forceRefresh = false) {
         cryptoCacheData = { data, currency };
         cryptoCacheTime = Date.now();
         renderCryptoWidget(cryptoCacheData);
-    } catch(e) {
+    } catch (e) {
         if (body) body.innerHTML = `<div class="widget-error">⚠️ Veri alınamadı<br><small>${e.message}</small></div>`;
     }
 }
@@ -626,7 +626,7 @@ async function fetchStockPrices(forceRefresh = false) {
         if (s.length === 5 && !s.includes('.')) return s.toUpperCase() + '.IS';
         return s.toUpperCase();
     });
-    
+
     if (symbols.length === 0) {
         if (body) body.innerHTML = '<div class="widget-error">Hisse sembolü girilmedi.</div>';
         return;
@@ -637,7 +637,7 @@ async function fetchStockPrices(forceRefresh = false) {
 
     for (const symbol of symbols) {
         let success = false;
-        
+
         // 1. ADIM: Yahoo Finance (v7/quote) — Daha hafif ve stabil
         try {
             const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
@@ -668,7 +668,7 @@ async function fetchStockPrices(forceRefresh = false) {
                 if (response && response.success && response.data.chart.result) {
                     const meta = response.data.chart.result[0].meta;
                     results.push({
-                        symbol: symbol.split('.')[0], 
+                        symbol: symbol.split('.')[0],
                         price: meta.regularMarketPrice,
                         prevClose: meta.previousClose || meta.chartPreviousClose || meta.regularMarketPrice,
                         currency: meta.currency
@@ -696,7 +696,7 @@ async function fetchStockPrices(forceRefresh = false) {
                     // JSON-LD veya meta tag'den fiyat çekme
                     const priceMatch = response.data.match(/data-last-price="([^"]+)"/);
                     const currencyMatch = response.data.match(/data-currency-code="([^"]+)"/);
-                    
+
                     if (priceMatch && priceMatch[1]) {
                         const price = parseFloat(priceMatch[1]);
                         if (!isNaN(price)) {
@@ -767,13 +767,13 @@ function renderStocksInWidget(stockData) {
     if (!body) return;
 
     if (!isFallback) body.innerHTML = '';
-    
+
     // Fallback durumunda (stale HTML) eski verileri temizle ama crypto varsa dokunma
     if (isFallback) {
         // Önceden borsa-item ile ayırt ediliyordu, artık ikisi de crypto-item
         // O yüzden sadece temizleme yapıyoruz.
     }
-    
+
     stockData.forEach(s => {
         const change = ((s.price - s.prevClose) / s.prevClose) * 100;
         const item = document.createElement('div');
@@ -923,12 +923,12 @@ async function fetchRSSFeeds(forceRefresh = false) {
                 lastError = response.error;
                 throw new Error(lastError);
             }
-            
+
             const text = response.data;
             if (!text) throw new Error("Boş içerik");
 
             const xml = new DOMParser().parseFromString(text, 'text/xml');
-            
+
             const parserError = xml.querySelector('parsererror');
             if (parserError) {
                 throw new Error("XML Ayrıştırma Hatası");
@@ -940,12 +940,12 @@ async function fetchRSSFeeds(forceRefresh = false) {
             items.forEach(item => {
                 let title = item.querySelector('title')?.textContent?.trim() || '';
                 let link = '';
-                
+
                 const linkEl = item.querySelector('link');
                 if (linkEl) {
                     link = linkEl.textContent.trim() || linkEl.getAttribute('href') || '';
                 }
-                
+
                 if (!link) {
                     link = item.querySelector('guid')?.textContent?.trim() || '';
                 }
@@ -954,7 +954,7 @@ async function fetchRSSFeeds(forceRefresh = false) {
                     allItems.push({ title, link, source });
                 }
             });
-        } catch(e) {
+        } catch (e) {
             console.warn('RSS fetch error:', feedUrl, e.message);
             if (!lastError) lastError = e.message;
         }
@@ -1032,7 +1032,7 @@ function updateWidgetVisibility() {
     if (stockCard) stockCard.style.display = stockOn ? '' : 'none';
     if (tefasCard) tefasCard.style.display = tefasOn ? '' : 'none';
     if (rssCard) rssCard.style.display = rssOn ? '' : 'none';
-    
+
     strip.style.display = (cryptoOn || stockOn || tefasOn || rssOn) ? '' : 'none';
 }
 
@@ -1916,7 +1916,7 @@ function exportNotes(format) {
 
     let content = '';
     const now = new Date();
-    const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     if (format === 'md') {
         content = `# ${ap.name} — Notlar\n_Dışa aktarma tarihi: ${dateStr}_\n\n---\n\n`;
@@ -1949,7 +1949,7 @@ function exportNotes(format) {
 // =============================================
 function exportData() {
     const now = new Date();
-    const ts = `${now.getFullYear()}_${String(now.getMonth()+1).padStart(2,'0')}_${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+    const ts = `${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}_${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
     const blob = new Blob([JSON.stringify(kokpitData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     sounds.playSave();
@@ -1962,7 +1962,7 @@ function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         try {
             const data = JSON.parse(e.target.result);
             if (data.profiles && data.currentProfileName) {
@@ -1973,7 +1973,7 @@ function importData(event) {
                 const ap = getActiveProfile();
                 if (ap) { ap.sidebar = data.sidebar; ap.shortcuts = data.shortcuts; saveData(); alert(`Eski format yüklendi: "${ap.name}" profiline uygulandı.`); }
             } else { alert("Geçersiz yedek dosyası!"); }
-        } catch(err) { alert("Dosya okunamadı!"); }
+        } catch (err) { alert("Dosya okunamadı!"); }
         event.target.value = "";
     };
     reader.readAsText(file);
@@ -2072,11 +2072,11 @@ function initVoiceRecognition() {
             textElement.textContent = interimTranscript;
             textElement.classList.add('active');
         }
-        
+
         if (finalTranscript) {
             textElement.textContent = finalTranscript;
             textElement.classList.add('active');
-            
+
             // Konuşma algılandığında Google'da aramayı tetikle
             setTimeout(() => {
                 stopVoiceSearch();
@@ -2108,7 +2108,7 @@ function handleVoiceSearch() {
     sounds.playClick();
     const overlay = document.getElementById('voice-overlay');
     if (!overlay) return;
-    
+
     initVoiceRecognition();
     if (voiceRecognition) {
         try {
@@ -2159,7 +2159,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let defaultDropMessage = "";
         const dropZoneMessage = lensDropZone.querySelector('p');
         const dropZoneIcon = lensDropZone.querySelector('.lens-icon-large');
-        
+
         if (dropZoneMessage) defaultDropMessage = dropZoneMessage.innerHTML;
 
         function bindUploadText() {
@@ -2204,14 +2204,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
             pendingLensFile = file;
-            
+
             if (dropZoneIcon) dropZoneIcon.textContent = "✅";
             if (dropZoneMessage) {
                 dropZoneMessage.innerHTML = `<span style="color:#8ab4f8; font-weight:bold;">${file.name}</span> seçildi.<br><br>Görselde aramak için <strong>"Ara"</strong> butonuna basın.`;
             }
             lensDropZone.style.borderColor = "#8ab4f8";
             lensDropZone.style.background = "rgba(138, 180, 248, 0.1)";
-            
+
             lensUrlInput.value = ""; // URL ile çakışmaması için temizle
         }
 
@@ -2231,12 +2231,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 const dt = new DataTransfer();
                 dt.items.add(pendingLensFile);
                 encodedImageInput.files = dt.files;
-                
+
                 // Form action'ı garantili güncel lens endpointi (yeni sekme engelini aşmak için _self (kaldırılmış target))
                 lensUploadForm.action = "https://lens.google.com/v3/upload";
-                lensUploadForm.removeAttribute('target'); 
+                lensUploadForm.removeAttribute('target');
                 lensUploadForm.submit();
-                
+
                 // NOT: resetLensUI() ÇAĞRILMAYACAK! Çağrılırsa işlem yarıda kesiliyor ve kapanıyordu.
                 return;
             }
@@ -2247,10 +2247,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 alert("Lütfen önce bir resim seçin veya görsel bağlantısı yapıştırın.");
                 return;
             }
-            
+
             const lensUrlStr = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(url)}`;
             window.location.href = lensUrlStr;
-            
+
             // Eğer URL gidiyorsa sıfırlama yapılabilir çünkü href atanması kesintiye uğratmaz
             setTimeout(resetLensUI, 100);
         }
