@@ -2588,40 +2588,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("closeVoiceBtn")?.addEventListener("click", stopVoiceSearch);
     document.getElementById("closeLensBtn")?.addEventListener("click", stopLensSearch);
 
-    // Tatlı Gözler (Mascot) Başlatma
-    initCuteEyes();
+    // Mascot logic is now handled in mascot.js
 });
-
-function initCuteEyes() {
-    const eyes = document.querySelectorAll('.cute-eye');
-    if (!eyes.length) return;
-
-    document.addEventListener('mousemove', (e) => {
-        eyes.forEach(eye => {
-            const pupil = eye.querySelector('.cute-pupil');
-            if (!pupil) return;
-
-            const rect = eye.getBoundingClientRect();
-            const eyeCenterX = rect.left + rect.width / 2;
-            const eyeCenterY = rect.top + rect.height / 2;
-
-            const rad = Math.atan2(e.clientY - eyeCenterY, e.clientX - eyeCenterX);
-
-            // Gözbebeğinin gidebileceği maksimum mesafe
-            const maxRadius = (rect.width / 2) - (pupil.offsetWidth / 2) - 2;
-
-            const dist = Math.hypot(e.clientX - eyeCenterX, e.clientY - eyeCenterY);
-            // Fare uzaklaştıkça gözler köşeye daha çok yanaşır
-            const power = Math.min(dist / 400, 1);
-            const moveRadius = maxRadius * power;
-
-            const pupilX = Math.cos(rad) * moveRadius;
-            const pupilY = Math.sin(rad) * moveRadius;
-
-            pupil.style.transform = `translate(${pupilX}px, ${pupilY}px)`;
-        });
-    });
-}
 
 // Modal dışına tıklama ile kapat
 window.addEventListener("click", (event) => {
