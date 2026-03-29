@@ -419,11 +419,32 @@ function updateBgOptionUI() {
 // Parçacık Sistemi
 function startParticles() {
     const W = () => bgCanvas.width, H = () => bgCanvas.height;
-    const particles = Array.from({ length: 70 }, () => ({
-        x: Math.random() * W(), y: Math.random() * H(),
-        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
-        r: Math.random() * 1.5 + 0.5
-    }));
+    const colors = [
+        '138, 180, 248', // Mavi (Çok küçük)
+        '244, 143, 177', // Pembe (Küçük)
+        '128, 203, 196', // Turkuaz (Orta)
+        '255, 204, 128'  // Turuncu (Büyük)
+    ];
+
+    const particles = Array.from({ length: 70 }, () => {
+        const r = Math.random() * 10.5 + 0.5;
+        let cIdx = 0;
+        if (r > 3 && r <= 6) cIdx = 1;
+        else if (r > 6 && r <= 9) cIdx = 2;
+        else if (r > 9) cIdx = 3;
+
+        // Yakınlık/Uzaklık efekti: Büyük atomlar daha hızlı hareket eder
+        // Minimum hız çarpanı + yarıçapa orantılı hız
+        const speedMultiplier = (r * 0.06) + 0.05;
+
+        return {
+            x: Math.random() * W(), y: Math.random() * H(),
+            vx: (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.5 + 0.5) * speedMultiplier,
+            vy: (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.5 + 0.5) * speedMultiplier,
+            r: r,
+            color: colors[cIdx]
+        };
+    });
 
     function draw() {
         bgCtx.clearRect(0, 0, W(), H());
@@ -433,16 +454,43 @@ function startParticles() {
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < 130) {
                     bgCtx.beginPath();
-                    bgCtx.strokeStyle = `rgba(138,180,248,${0.12 * (1 - dist / 130)})`;
+                    // Çizgiler için daha nötr ama uyumlu transparan beyazımsı renk
+                    bgCtx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - dist / 130)})`;
                     bgCtx.lineWidth = 0.5;
                     bgCtx.moveTo(p.x, p.y); bgCtx.lineTo(q.x, q.y);
                     bgCtx.stroke();
                 }
             });
+            
+            // 3D Küre (Sphere) Parıltısı ve Derinlik
             bgCtx.beginPath();
             bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            bgCtx.fillStyle = 'rgba(138,180,248,0.5)';
+
+            // Radial gradient ile ışık ve gölgelendirme (Sol üstten parlayan 3D bilye efekti)
+            const gradient = bgCtx.createRadialGradient(
+                p.x - p.r * 0.3, p.y - p.r * 0.3, p.r * 0.1, // Işığın vurduğu nokta
+                p.x, p.y, p.r // Küre sınırları
+            );
+            // Kürenin ışık alan yansıma noktası (Glass/Specular highlight)
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            // Merkezden dışa renk yayılımı
+            gradient.addColorStop(0.5, `rgba(${p.color}, 0.7)`);
+            // Kürenin gölgede kalan köşeleri
+            gradient.addColorStop(1, `rgba(${p.color}, 0.1)`);
+
+            bgCtx.fillStyle = gradient;
+            
+            // Dış uzay ışıltısı
+            bgCtx.shadowBlur = p.r * 5; 
+            bgCtx.shadowColor = `rgba(${p.color}, 0.9)`;
             bgCtx.fill();
+            
+            // Küre Zar Hissiyatı 
+            bgCtx.lineWidth = 0.5;
+            bgCtx.strokeStyle = `rgba(255, 255, 255, 0.2)`;
+            bgCtx.stroke();
+            
+            bgCtx.shadowBlur = 0; // Reset for performance and lines
             p.x += p.vx; p.y += p.vy;
             if (p.x < 0 || p.x > W()) p.vx *= -1;
             if (p.y < 0 || p.y > H()) p.vy *= -1;
@@ -485,8 +533,11 @@ function startStars() {
     }));
 
     function draw() {
-        bgCtx.fillStyle = 'rgba(0,0,0,0.08)';
+        // Temaya göre zemin ve yıldız renklerini belirle
+        const isLight = kokpitData.activeTheme === 'light';
+        bgCtx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
         bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+        
         const cx = bgCanvas.width / 2, cy = bgCanvas.height / 2;
         stars.forEach(s => {
             s.pz = s.z; s.z -= 2;
@@ -496,15 +547,26 @@ function startStars() {
             }
             const sx = (s.x - cx) * (bgCanvas.width / s.z) + cx;
             const sy = (s.y - cy) * (bgCanvas.width / s.z) + cy;
-            const spx = (s.x - cx) * (bgCanvas.width / s.pz) + cx;
-            const spy = (s.y - cy) * (bgCanvas.width / s.pz) + cy;
-            const size = (1 - s.z / bgCanvas.width) * 6; // Yıldızları daha belirgin yapmak için büyütüldü
+            // spx ve spy artık kullanılmayacak çünkü çubuk yerine nokta çizeceğiz
+            const size = (1 - s.z / bgCanvas.width) * 4; // Büyüklüğü biraz daha minimize ettik ki zarif dursun
             const alpha = 1 - s.z / bgCanvas.width;
+            
             bgCtx.beginPath();
-            bgCtx.strokeStyle = `rgba(255,255,255,${alpha})`;
-            bgCtx.lineWidth = size;
-            bgCtx.moveTo(spx, spy); bgCtx.lineTo(sx, sy);
-            bgCtx.stroke();
+            
+            // Temaya uygun renk ve Hale (Glow) efekti
+            if (isLight) {
+                bgCtx.fillStyle = `rgba(66, 133, 244, ${alpha})`; // Tatlı mavi dolgu
+                bgCtx.shadowColor = `rgba(66, 133, 244, ${alpha * 0.8})`;
+            } else {
+                bgCtx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                bgCtx.shadowColor = `rgba(255, 255, 255, ${alpha * 0.8})`;
+            }
+            bgCtx.shadowBlur = size * 4; // Hale/parlama
+            
+            bgCtx.arc(sx, sy, size > 0 ? size : 0.1, 0, Math.PI * 2);
+            bgCtx.fill();
+            
+            bgCtx.shadowBlur = 0; // Performans ve diğer çizimler için sıfırla
         });
         bgAnimFrame = requestAnimationFrame(draw);
     }
@@ -1050,7 +1112,7 @@ function updateWidgetVisibility() {
     if (rssCard) rssCard.style.display = rssOn ? '' : 'none';
 
     strip.style.display = (cryptoOn || stockOn || tefasOn || rssOn) ? '' : 'none';
-    
+
     // Yükseklik ayarını CSS değişkeni olarak uygula
     const customHeight = parseInt(cfg.height) || 180;
     document.documentElement.style.setProperty('--widget-height', `${customHeight}px`);
@@ -1090,7 +1152,7 @@ function closeWidgetSettingsModal() {
 
 function saveWidgetSettings() {
     const el = (id) => document.getElementById(id);
-    
+
     let wHeight = parseInt(el('widgetHeight').value, 10);
     if (isNaN(wHeight) || wHeight < 100) wHeight = 180;
     kokpitData.widgets.height = wHeight;
@@ -2544,7 +2606,7 @@ function initCuteEyes() {
             const eyeCenterY = rect.top + rect.height / 2;
 
             const rad = Math.atan2(e.clientY - eyeCenterY, e.clientX - eyeCenterX);
-            
+
             // Gözbebeğinin gidebileceği maksimum mesafe
             const maxRadius = (rect.width / 2) - (pupil.offsetWidth / 2) - 2;
 

@@ -1668,24 +1668,68 @@ body.resizing-h { cursor: row-resize; user-select: none; }
 }
 
 .cute-eye {
-    width: 32px;
-    height: 32px;
-    background: #fff;
+    width: 38px;
+    height: 38px;
+    background: radial-gradient(circle at 35% 35%, #ffffff, #dcdcdc 65%, #a0a0a0);
     border-radius: 50%;
     position: relative;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 2px 6px rgba(0,0,0,0.15);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4), inset 0 -3px 8px rgba(0,0,0,0.3), inset 0 3px 6px rgba(255,255,255,0.8);
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+}
+
+.cute-eye::before {
+    content: '';
+    position: absolute;
+    top: -110%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
+    background: var(--bg-floating); 
+    border-bottom: 2px solid var(--border-color);
+    border-radius: 0 0 50% 50%;
+    z-index: 5;
+    animation: blink 4s infinite;
+}
+
+@keyframes blink {
+    0%, 94%, 98%, 100% { top: -110%; }
+    96% { top: -5%; }
 }
 
 .cute-pupil {
-    width: 14px;
-    height: 14px;
-    background: #1a1a1a;
+    width: 18px;
+    height: 18px;
+    background: radial-gradient(circle at center, #0f0f0f 25%, #2a7a9e 40%, #174257 75%, #05141c 100%);
     border-radius: 50%;
     position: absolute;
-    box-shadow: inset -3px -3px 0 rgba(255,255,255,0.8), inset 1px 1px 0 rgba(255,255,255,0.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5), inset -2px -2px 4px rgba(0,0,0,0.7);
     transition: transform 0.05s linear;
+    z-index: 2;
+}
+
+.cute-pupil::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    width: 5px;
+    height: 5px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 50%;
+    box-shadow: 0 0 3px rgba(255,255,255,0.8);
+}
+
+.cute-pupil::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    width: 2px;
+    height: 2px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 50%;
 }
 
